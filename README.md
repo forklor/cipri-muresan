@@ -13,11 +13,11 @@ Change of speed (stopping, starting) will be made using a linear acceleration / 
 ### Configurable parameters
 * **MAX_SPEED** - the top speed value for the motor (value from 0-255)
 * **ACCELERATION** - when starting from speed 0, increase speed with this value on an interval until reaching MAX_SPEED (value from 0-255)
-* **DECELERATION_PROPORTION** - defines at what percentage from **ACCELERATION** to decrease speed when stoping(value from 0-1, i.e a value of 0.5 will result in deceleration rate of **ACCELERATION**/2)
+* **DECELERATION_FACTOR** - defines how fast to slow down compared to **ACCELERATION** value, (e.g. for value 2, deceleratio will be at double the rate of acceleration)
 * **CURRENT_SENSING_TRESHOLD** - value for current sensing pin at which to stop and reverse direction (to fix cases where the motor gets stuck)
 
 ### Wireless communication
-The controller accepts messages from wireless receiver and acts accordingly. Start/Stop/Change Direction actions will be made following *ACCELERATION* and *DECELERATION_PROPORTION* parameters.
+The controller accepts messages from wireless receiver and acts accordingly. Start/Stop/Change Direction actions will be made following **ACCELERATION** and **DECELERATION_FACTOR** parameters.
 
 #### Receive messages
 * **SET_PARAMS** - sets the values for the configurable parameters as described above, so that next `loop` cycle will use new value

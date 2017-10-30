@@ -2,6 +2,8 @@
  *  Script that uses Monster Moto Shield controller to change motor speed and direction following defined intervals (STATES_CYCLE)
  */
 #include <math.h>
+#include "motor.h"
+#include "Arduino.h"
 
 #define BRAKE 0
 #define CW    1
@@ -53,6 +55,24 @@ motionState currentState;
 int stateCycleIndex = 0;
 long startTimeCurrentState = 0;
 
+//Function that controls the variables: motor(0 or 1), direction (cw or ccw) and pwm (between 0 and 255);
+void motorGo(uint8_t motor, uint8_t direct, uint8_t pwm) {
+	if(motor == MOTOR_1) {
+		if(direct == CW) {
+			digitalWrite(MOTOR_A1_PIN, LOW);
+			digitalWrite(MOTOR_B1_PIN, HIGH);
+		} else if(direct == CCW) {
+			digitalWrite(MOTOR_A1_PIN, HIGH);
+			digitalWrite(MOTOR_B1_PIN, LOW);
+		} else {
+			digitalWrite(MOTOR_A1_PIN, LOW);
+			digitalWrite(MOTOR_B1_PIN, LOW);
+		}
+
+		analogWrite(PWM_MOTOR_1, pwm);
+	}
+}
+
 int getIntervalValue(long currTime, long begin, long difference, long totalTime) {
 	// return difference * currTime / totalTime + begin; // -> LINEAR
 	return round(begin + difference * pow((double)currTime / (double)totalTime, 5)); // -> EXPONENTIAL OUT
@@ -89,7 +109,7 @@ void updateMotorMotion(long millis) {
 	}
 }
 
-void setup() {
+void motor_setup() {
 	
 	pinMode(MOTOR_A1_PIN, OUTPUT);
 	pinMode(MOTOR_B1_PIN, OUTPUT);
@@ -114,7 +134,7 @@ void setup() {
 	startTimeCurrentState = milliseconds;
 }
 
-void loop() {
+void motor_loop() {
 
 	unsigned long currMilis = millis();
 	updateMotorMotion(currMilis);
@@ -130,23 +150,5 @@ void loop() {
 
 	if (analogRead(CURRENT_SEN_1) < CS_THRESHOLD) {
 		//Serial.println("CS_THRESHOLD reached");
-	}
-}
-
-//Function that controls the variables: motor(0 or 1), direction (cw or ccw) and pwm (between 0 and 255);
-void motorGo(uint8_t motor, uint8_t direct, uint8_t pwm) {
-	if(motor == MOTOR_1) {
-		if(direct == CW) {
-			digitalWrite(MOTOR_A1_PIN, LOW);
-			digitalWrite(MOTOR_B1_PIN, HIGH);
-		} else if(direct == CCW) {
-			digitalWrite(MOTOR_A1_PIN, HIGH);
-			digitalWrite(MOTOR_B1_PIN, LOW);
-		} else {
-			digitalWrite(MOTOR_A1_PIN, LOW);
-			digitalWrite(MOTOR_B1_PIN, LOW);
-		}
-
-		analogWrite(PWM_MOTOR_1, pwm);
 	}
 }
