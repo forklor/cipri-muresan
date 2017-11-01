@@ -7,13 +7,11 @@
 #include "modules/display.h"
 
 void keypadPressed(char key) {
-	Serial.println(key);
 	display_lcd.home();
-	display_lcd.print("HELLO THERE");
+	display_lcd.print(key);
 }
 
 void setup() {
-
 	Serial.begin(9600);
 	_keypad_setup(keypadPressed);
 	_display_setup();

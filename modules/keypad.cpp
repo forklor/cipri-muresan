@@ -25,7 +25,6 @@ void _keypad_loop(long milliseconds) {
 	char key = keypad.getKey();
 
 	if (key != NO_KEY) {
-		//Serial.println(key);
 		_k_listener(key);
 	}
 }
