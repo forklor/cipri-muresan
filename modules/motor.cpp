@@ -14,11 +14,7 @@
 #define MOTOR_A1_PIN 7
 #define MOTOR_B1_PIN 8
 
-#define MOTOR_A2_PIN 4
-#define MOTOR_B2_PIN 9
-
 #define PWM_MOTOR_1 5
-#define PWM_MOTOR_2 6
 
 #define CURRENT_SEN_1 A2
 #define CURRENT_SEN_2 A3
@@ -47,22 +43,15 @@ void motorGo( uint8_t direct, uint8_t pwm) {
 	if(direct == CW) {
 		digitalWrite(MOTOR_A1_PIN, LOW);
 		digitalWrite(MOTOR_B1_PIN, HIGH);
-		digitalWrite(MOTOR_A2_PIN, LOW);
-		digitalWrite(MOTOR_B2_PIN, HIGH);
 	} else if(direct == CCW) {
 		digitalWrite(MOTOR_A1_PIN, HIGH);
 		digitalWrite(MOTOR_B1_PIN, LOW);
-		digitalWrite(MOTOR_A2_PIN, HIGH);
-		digitalWrite(MOTOR_B2_PIN, LOW);
 	} else {
 		digitalWrite(MOTOR_A1_PIN, LOW);
 		digitalWrite(MOTOR_B1_PIN, LOW);
-		digitalWrite(MOTOR_A2_PIN, LOW);
-		digitalWrite(MOTOR_B2_PIN, LOW);
 	}
 
 	analogWrite(PWM_MOTOR_1, pwm);
-	analogWrite(PWM_MOTOR_2, pwm);
 }
 
 void _motor_setup() {
@@ -70,9 +59,6 @@ void _motor_setup() {
 	pinMode(MOTOR_A1_PIN, OUTPUT);
 	pinMode(MOTOR_B1_PIN, OUTPUT);
 	pinMode(PWM_MOTOR_1, OUTPUT);
-	pinMode(MOTOR_A2_PIN, OUTPUT);
-	pinMode(MOTOR_B2_PIN, OUTPUT);
-	pinMode(PWM_MOTOR_2, OUTPUT);
 	pinMode(CURRENT_SEN_1, INPUT);
 	pinMode(CURRENT_SEN_2, INPUT);
 	pinMode(EN_PIN_1, INPUT);
