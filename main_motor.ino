@@ -1,4 +1,15 @@
+#ifndef MAIN_ENTRY_FILE
+#define MAIN_ENTRY_FILE
+
 #include "modules/motor.h"
+#include "modules/wireless.h"
+#include "modules/wireless_message.h"
+
+void wirelessMessageReceived(wirelessMessage message) {
+	Serial.print("received message");
+	Serial.print(message.type);
+	Serial.print("\n");
+}
 
 void setup() {
 
@@ -10,7 +21,9 @@ void setup() {
 		2,
 		15
 	});
-	//motor_start();
+	
+	_wireless_setup(9, 10);
+	wireless_listen(wirelessMessageReceived);
 }
 
 void loop() {
@@ -18,6 +31,7 @@ void loop() {
 	unsigned long milliseconds = millis();
 
 	_motor_loop(milliseconds);
+	_wireless_loop(milliseconds);
 
 	if (Serial.available() > 0) {
 		char receivedChar = Serial.read();
@@ -44,3 +58,5 @@ void loop() {
 		}
 	}
 }
+
+#endif //MAIN_ENTRY_FILE
