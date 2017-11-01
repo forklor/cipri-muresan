@@ -10,7 +10,7 @@ void setup() {
 		2,
 		15
 	});
-	motor_start();
+	//motor_start();
 }
 
 void loop() {
@@ -27,6 +27,9 @@ void loop() {
 				break;
 			case 'x':
 				motor_stop();
+				break;
+			case 'c':
+				motor_stop_brake();
 				break;
 			case 'b':
 				motor_start();
