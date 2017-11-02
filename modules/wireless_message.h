@@ -1,5 +1,5 @@
-#ifndef WIRELES_MESSAGE_H_
-#define WIRELES_MESSAGE_H_
+#ifndef WIRELESS_MESSAGE_H_
+#define WIRELESS_MESSAGE_H_
 
 #include "motor.h"
 
@@ -15,4 +15,4 @@ struct wirelessMessage {
 	motorParameters parameters;
 };
 
-#endif // WIRELES_MESSAGE_H_
+#endif // WIRELESS_MESSAGE_H_

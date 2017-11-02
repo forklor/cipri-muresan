@@ -3,9 +3,8 @@
 
 #include "modules/motor.h"
 #include "modules/wireless.h"
-#include "modules/wireless_message.h"
 
-void wirelessMessageReceived(wirelessMessage message) {
+void m_wirelessMessageReceived(wirelessMessage message) {
 	Serial.print("received message");
 	Serial.print(message.type);
 	Serial.print("\n");
@@ -14,6 +13,10 @@ void wirelessMessageReceived(wirelessMessage message) {
 void setup() {
 
 	Serial.begin(9600);
+	Serial.println("Motor program running");
+	_wireless_setup(9, 10, WIRELESS_MODULE_1);
+	wireless_listen(WIRELESS_REMOTE, m_wirelessMessageReceived);
+
 	_motor_setup();
 	motor_set_parameters({
 		100,
@@ -21,9 +24,6 @@ void setup() {
 		2,
 		15
 	});
-	
-	_wireless_setup(9, 10);
-	wireless_listen(wirelessMessageReceived);
 }
 
 void loop() {
