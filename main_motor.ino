@@ -5,9 +5,29 @@
 #include "modules/wireless.h"
 
 void m_wirelessMessageReceived(wirelessMessage message) {
-	Serial.print("received message");
+	Serial.print("received message ");
 	Serial.print(message.type);
 	Serial.print("\n");
+
+	switch (message.type) {
+		case MESSAGE_TOGGLE_START_STOP:
+			motor_toggle_start_stop();
+			break;
+		case MESSAGE_SET_PARAMS:
+			motor_set_parameters(message.parameters);
+			break;
+		case MESSAGE_CHANGE_DIRECTION: 
+			motor_switch_direction();
+			break;
+		case MESSAGE_START:
+			motor_start();
+			break;
+		case MESSAGE_STOP:
+			motor_start();
+			break;
+		default:
+			Serial.println("Unknown message type");
+	}
 }
 
 void setup() {

@@ -16,21 +16,38 @@ void keypadPressed(char key) {
 	display_lcd.print(key);
 
 	Serial.println(key);
-
-	if(key == 'A') {
-		Serial.println("Sending message");
-		wirelessMessage msg = {
-			MESSAGE_TOGGLE_START_STOP,
-			{0, 0, 0, 0}
-		};
-		wireless_send_message(WIRELESS_MODULE_1, msg);
+	wirelessMessage msg;
+	switch(key) {
+		case 'A':
+			Serial.println("Sending toggle start/stop message");
+			msg.type = MESSAGE_TOGGLE_START_STOP;
+			wireless_send_message(WIRELESS_MODULE_1, msg);
+			break;
+		case 'B':
+			Serial.println("Sending change direction message");
+			msg.type = MESSAGE_CHANGE_DIRECTION;
+			wireless_send_message(WIRELESS_MODULE_1, msg);
+			break;
+		case 'C':
+			Serial.println("Sending stop message");
+			msg.type = MESSAGE_STOP;
+			wireless_send_message(WIRELESS_MODULE_1, msg);
+			break;
+		case 'D':
+			Serial.println("Sending start message");
+			msg.type = MESSAGE_START;
+			wireless_send_message(WIRELESS_MODULE_1, msg);
+			break;
+		default:
+			//do nothing
+			break;
 	}
 }
 
 void setup() {
 
 	Serial.begin(9600);
-	Serial.println("Module 1 program running");
+	Serial.println("Remote control program running");
 	_wireless_setup(A0, A1, WIRELESS_REMOTE);
 	_keypad_setup(keypadPressed);
 	_display_setup();
