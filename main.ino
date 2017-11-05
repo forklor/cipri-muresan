@@ -7,7 +7,7 @@
 #ifdef REMOTE_CONTROL_CONTROLLER
 #include "main_remote_control.h"
 #endif //REMOTE_CONTROL_CONTROLLER
-
+	
 void setup() {
 	_setup();
 }

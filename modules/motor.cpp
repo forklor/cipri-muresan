@@ -14,7 +14,7 @@
 #define MOTOR_A1_PIN 7
 #define MOTOR_B1_PIN 8
 
-#define PWM_MOTOR_1 5
+#define PWM_MOTOR_1 6
 
 #define CURRENT_SEN_1 A2
 #define CURRENT_SEN_2 A3
@@ -37,43 +37,64 @@ int _targetDirection;
 long _lastLoopMillis;
 long _directionChangeStopMillis;
 
+bool _running;
+
 //Function that controls the variables: motor(0 or 1), direction (cw or ccw) and pwm (between 0 and 255);
 void motorGo( uint8_t direct, uint8_t pwm) {
 
 	if(direct == CW) {
 		digitalWrite(MOTOR_A1_PIN, LOW);
 		digitalWrite(MOTOR_B1_PIN, HIGH);
+		//digitalWrite(MOTOR_A2_PIN, LOW);
+		//digitalWrite(MOTOR_B2_PIN, HIGH);
 	} else if(direct == CCW) {
 		digitalWrite(MOTOR_A1_PIN, HIGH);
 		digitalWrite(MOTOR_B1_PIN, LOW);
+		//digitalWrite(MOTOR_A2_PIN, HIGH);
+		//digitalWrite(MOTOR_B2_PIN, LOW);
 	} else {
 		digitalWrite(MOTOR_A1_PIN, LOW);
 		digitalWrite(MOTOR_B1_PIN, LOW);
+		//digitalWrite(MOTOR_A2_PIN, LOW);
+		//digitalWrite(MOTOR_B2_PIN, LOW);
 	}
 
 	analogWrite(PWM_MOTOR_1, pwm);
+	//analogWrite(PWM_MOTOR_2, pwm);
 }
 
 void _motor_setup() {
-	
+
 	pinMode(MOTOR_A1_PIN, OUTPUT);
 	pinMode(MOTOR_B1_PIN, OUTPUT);
+
 	pinMode(PWM_MOTOR_1, OUTPUT);
+
+	//pinMode(MOTOR_A2_PIN, OUTPUT);
+	//pinMode(MOTOR_B2_PIN, OUTPUT);
+
+	//pinMode(PWM_MOTOR_2, OUTPUT);
+
 	pinMode(CURRENT_SEN_1, INPUT);
 	pinMode(CURRENT_SEN_2, INPUT);
-	pinMode(EN_PIN_1, INPUT);
-	pinMode(EN_PIN_2, INPUT);
+	pinMode(EN_PIN_1, OUTPUT);
+	pinMode(EN_PIN_2, OUTPUT);
+
+	digitalWrite(EN_PIN_1, HIGH);
+	digitalWrite(EN_PIN_2, HIGH);
 
 	// Initiates the serial to do the monitoring
 	Serial.println("Begin motor control");
 
 	_lastLoopMillis = millis();
 
+	_running = false;
 	_currentSpeed = _targetSpeed = 0;
 	_currentDirection = _targetDirection = CW;
 }
 
 void motor_start() {
+	_running = true;
 	_targetSpeed = settings.maxSpeed;
 	if(_targetDirection != _currentDirection) {
 		_targetDirection = _currentDirection;
@@ -84,6 +105,7 @@ void motor_start() {
 }
 
 void motor_stop() {
+	_running = false;
 	_targetSpeed = 0;
 	_targetDirection = _currentDirection;// = BRAKE;
 }
@@ -110,7 +132,7 @@ void motor_switch_direction() {
 
 void motor_set_parameters(motorParameters params) {
 	settings = params;
-	_targetSpeed = settings.maxSpeed;
+	if(_running) _targetSpeed = settings.maxSpeed;
 }
 
 void _motor_loop(long milliseconds) {
@@ -128,7 +150,7 @@ void _motor_loop(long milliseconds) {
 	} else {
 
 		if(_currentSpeed == 0) {
-			// When reaching speed 0, it takes a while for the motor to fully stop, 
+			// When reaching speed 0, it takes a while for the motor to fully stop,
 			// To prevent any sudden movement, wait some time before changing speed and direction
 			if(!_directionChangeStopMillis) {
 				_directionChangeStopMillis = milliseconds;
@@ -167,6 +189,6 @@ void _motor_loop(long milliseconds) {
 
 
 	if (analogRead(CURRENT_SEN_1) < CS_THRESHOLD) {
-		//Serial.println("CS_THRESHOLD reached");
+		Serial.println("CS_THRESHOLD reached");
 	}
 }
