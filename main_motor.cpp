@@ -1,5 +1,8 @@
-#ifndef MAIN_ENTRY_FILE
-#define MAIN_ENTRY_FILE
+#include "main_motor.h"
+
+#ifdef MOTOR_CONTROLLER
+
+#include <Arduino.h>
 
 #include "modules/motor.h"
 #include "modules/wireless.h"
@@ -30,7 +33,7 @@ void m_wirelessMessageReceived(wirelessMessage message) {
 	}
 }
 
-void setup() {
+void _setup() {
 
 	Serial.begin(9600);
 	Serial.println("Motor program running");
@@ -46,7 +49,7 @@ void setup() {
 	});
 }
 
-void loop() {
+void _loop() {
 	
 	unsigned long milliseconds = millis();
 
@@ -79,4 +82,4 @@ void loop() {
 	}
 }
 
-#endif //MAIN_ENTRY_FILE
+#endif //MOTOR_CONTROLLER

@@ -21,6 +21,11 @@ unsigned long startWaitingForAckTime;
 bool sendMessage;
 wirelessMessage messageToSend;
 
+int *targetAddresses;
+int targetAddressesLen;
+int targetAddressIndex;
+bool sendMesssageMultiple;
+
 void _wireless_setup(int pinA, int pinB, int address) {
 
 	listening = false;
@@ -33,6 +38,24 @@ void _wireless_setup(int pinA, int pinB, int address) {
 	radio->begin();
 	radio->enableAckPayload();
 	radio->enableDynamicPayloads();
+}
+
+
+void checkIfMultipleMessages() {
+
+	if(!sendMesssageMultiple) return;
+	
+	targetAddressIndex += 1;
+	
+	if(targetAddressIndex < targetAddressesLen - 1) {
+		Serial.print("send message to index ");
+		Serial.println(targetAddressIndex);
+		wireless_send_message(targetAddresses[targetAddressIndex], messageToSend);
+	} else {
+		Serial.println("finished sending message to multiple targets");
+		targetAddressIndex = -1;
+		sendMesssageMultiple = false;
+	}
 }
 
 void _wireless_loop(long milliseconds) {
@@ -78,17 +101,24 @@ void _wireless_loop(long milliseconds) {
 
 		if (!radio->write(&messageToSend, sizeof(messageToSend))) {
 			Serial.println("Failed writing");
-			delay(1000);
+			sendMessage = false;
+			checkIfMultipleMessages();
 		} else {
 			waitingForAck = true;
 			startWaitingForAckTime = millis();
 			radio->startListening();
 			sendMessage = false;
+			checkIfMultipleMessages();
 		}
 	}
 }
 
 void wireless_send_message(int targetAddress, wirelessMessage msg) {
+
+	Serial.print("send message from ");
+	Serial.print(localAddress);
+	Serial.print(" to ");
+	Serial.println(targetAddress);
 
 	radio->openWritingPipe(wireless_addresses[localAddress]); // remote_control
 	radio->openReadingPipe(1, wireless_addresses[targetAddress]); // module_x
@@ -97,6 +127,17 @@ void wireless_send_message(int targetAddress, wirelessMessage msg) {
 
 	sendMessage = true;
 	messageToSend = msg;
+}
+
+void wireless_send_message(int *targets, int addresses_len, wirelessMessage msg) {
+
+	memcpy(targetAddresses, targets, addresses_len * sizeof(int));
+	sendMesssageMultiple = true;
+	targetAddressIndex = 0;
+
+	targetAddressesLen = addresses_len;
+
+	wireless_send_message(targetAddresses[targetAddressIndex], msg);
 }
 
 void wireless_listen(int targetAddress, void (*f)(wirelessMessage)) {
