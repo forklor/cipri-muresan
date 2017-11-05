@@ -47,7 +47,7 @@ void checkIfMultipleMessages() {
 	
 	targetAddressIndex += 1;
 	
-	if(targetAddressIndex < targetAddressesLen - 1) {
+	if(targetAddressIndex < targetAddressesLen) {
 		Serial.print("send message to index ");
 		Serial.println(targetAddressIndex);
 		wireless_send_message(targetAddresses[targetAddressIndex], messageToSend);
@@ -129,13 +129,14 @@ void wireless_send_message(int targetAddress, wirelessMessage msg) {
 	messageToSend = msg;
 }
 
-void wireless_send_message(int *targets, int addresses_len, wirelessMessage msg) {
+void wireless_send_message(int *targets, int targets_len, wirelessMessage msg) {
 
-	memcpy(targetAddresses, targets, addresses_len * sizeof(int));
+	targetAddresses = malloc(targets_len * sizeof(*targetAddresses));
+	memcpy(targetAddresses, targets, targets_len * sizeof(*targetAddresses));
+
 	sendMesssageMultiple = true;
 	targetAddressIndex = 0;
-
-	targetAddressesLen = addresses_len;
+	targetAddressesLen = targets_len;
 
 	wireless_send_message(targetAddresses[targetAddressIndex], msg);
 }

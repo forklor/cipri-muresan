@@ -50,8 +50,8 @@ void keypadPressed(char key) {
 			break;
 		case 'A':
 			msg.type = MESSAGE_TOGGLE_START_STOP;
-			wireless_send_message(all_addresses, 6, msg);
 			timer_start();
+			wireless_send_message(all_addresses, 6, msg);
 			break;
 		case 'B':
 			menu_up();
