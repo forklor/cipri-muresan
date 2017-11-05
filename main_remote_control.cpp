@@ -27,7 +27,7 @@ void keypadPressed(char key) {
 		WIRELESS_MODULE_6 
 	};
 
-	Serial.println(key);
+	char currentMenu = menu_get_current();
 	wirelessMessage msg;
 	switch(key) {
 		case '1':
@@ -49,8 +49,30 @@ void keypadPressed(char key) {
 			wireless_send_message(WIRELESS_MODULE_1, msg);
 			break;
 		case 'A':
-			msg.type = MESSAGE_TOGGLE_START_STOP;
-			timer_start();
+			if(currentMenu == MENU_TIMER_ON) {
+				menu_right();
+				display_show_message("STOPPING", "ALL MOTORS", 2000);
+				msg.type = MESSAGE_STOP;
+				timer_stop();
+			} else if(currentMenu == MENU_TIMER_OFF) {
+				menu_left();
+				display_show_message("STARTING", "ALL MOTORS", 2000);
+				msg.type = MESSAGE_START;
+				timer_stop();
+			} else if(currentMenu == MENU_MANUAL_ON) {
+				menu_right();
+				display_show_message("STOPPING", "ALL MOTORS TIMER", 2000);
+				timer_set_state(false);
+				if(timer_is_paused()) timer_start();
+				msg.type = MESSAGE_START;
+			} else if(currentMenu == MENU_MANUAL_OFF) {
+				menu_left();
+				display_show_message("STARTING", "ALL MOTORS TIMER", 2000);
+				timer_set_state(true);
+				if(timer_is_paused()) timer_start();
+				msg.type = MESSAGE_START;
+			}
+
 			wireless_send_message(all_addresses, 6, msg);
 			break;
 		case 'B':
@@ -94,6 +116,7 @@ void _loop() {
 	_keypad_loop(milliseconds);
 	_timer_loop(milliseconds);
 	_menu_loop(milliseconds);
+	_display_loop(milliseconds);
 }
 
 #endif //MOTOR_REMOTE_CONTROLLER

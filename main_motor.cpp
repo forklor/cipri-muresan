@@ -26,7 +26,7 @@ void m_wirelessMessageReceived(wirelessMessage message) {
 			motor_start();
 			break;
 		case MESSAGE_STOP:
-			motor_start();
+			motor_stop();
 			break;
 		default:
 			Serial.println("Unknown message type");

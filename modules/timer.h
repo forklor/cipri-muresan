@@ -17,6 +17,7 @@ void timer_start();
 
 void timer_set_state(bool running);
 bool timer_is_running();
+bool timer_is_paused();
 
 void _timer_setup();
 void _timer_loop(long milliseconds);

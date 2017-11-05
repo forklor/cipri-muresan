@@ -56,6 +56,10 @@ void timer_set_state(bool running) {
 	currentStateStartTime = millis();
 }
 
+bool timer_is_paused() {
+	return paused;
+} 
+
 bool timer_is_running() {
 	return runningState;
 }
@@ -70,7 +74,7 @@ void _timer_setup() {
 	currentStateStartTime = millis();
 	lastStepTime = millis();
 
-	runningState = true;
+	runningState = false;
 	paused = true;
 
 	runTime = 30000L; // 30 seconds

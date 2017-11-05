@@ -189,6 +189,6 @@ void _motor_loop(long milliseconds) {
 
 
 	if (analogRead(CURRENT_SEN_1) < CS_THRESHOLD) {
-		Serial.println("CS_THRESHOLD reached");
+		//Serial.println("CS_THRESHOLD reached");
 	}
 }
