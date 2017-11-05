@@ -38,7 +38,7 @@ void keypadPressed(char key) {
 			msg.type = MESSAGE_CHANGE_DIRECTION;
 			wireless_send_message(WIRELESS_MODULE_1, msg);
 			break;
-		case '8':
+		case '7':
 			msg.type = MESSAGE_SET_PARAMS;
 			msg.parameters = {
 				50,

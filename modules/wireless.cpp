@@ -86,6 +86,7 @@ void _wireless_loop(long milliseconds) {
 			Serial.println("Failed, response timed out.");
 			radio->stopListening();
 			waitingForAck = false;
+			checkIfMultipleMessages();
 		} else {
 			wirelessMessage ackMessage;
 			while(radio->available()) {
@@ -93,6 +94,7 @@ void _wireless_loop(long milliseconds) {
 				Serial.print("Got ack");
 				radio->stopListening();
 				waitingForAck = false;
+				checkIfMultipleMessages();
 			}
 		}
 	} else if(sendMessage) {
@@ -108,7 +110,6 @@ void _wireless_loop(long milliseconds) {
 			startWaitingForAckTime = millis();
 			radio->startListening();
 			sendMessage = false;
-			checkIfMultipleMessages();
 		}
 	}
 }
@@ -120,8 +121,8 @@ void wireless_send_message(int targetAddress, wirelessMessage msg) {
 	Serial.print(" to ");
 	Serial.println(targetAddress);
 
-	radio->openWritingPipe(wireless_addresses[localAddress]); // remote_control
-	radio->openReadingPipe(1, wireless_addresses[targetAddress]); // module_x
+	radio->openWritingPipe(wireless_addresses[targetAddress]); // module_x
+	radio->openReadingPipe(1, wireless_addresses[localAddress]); // remote control
 
 	radio->startListening();
 
@@ -152,8 +153,8 @@ void wireless_listen(int targetAddress, void (*f)(wirelessMessage)) {
 	listening = true;
 	_w_listener = f;
 
-	radio->openWritingPipe(wireless_addresses[localAddress]); // module_x
-	radio->openReadingPipe(1, wireless_addresses[targetAddress]);  // remote_control
+	radio->openWritingPipe(wireless_addresses[targetAddress]); // remtote control
+	radio->openReadingPipe(1, wireless_addresses[localAddress]);  // module_x
 	
 	radio->startListening();
 }

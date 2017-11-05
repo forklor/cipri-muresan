@@ -110,6 +110,7 @@ void motor_switch_direction() {
 
 void motor_set_parameters(motorParameters params) {
 	settings = params;
+	_targetSpeed = settings.maxSpeed;
 }
 
 void _motor_loop(long milliseconds) {
