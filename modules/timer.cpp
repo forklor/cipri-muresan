@@ -12,6 +12,7 @@ bool paused;
 long runTime;
 long stopTime;
 
+void (*_t_listener)(bool running);
 
 long timer_get_run_time() {
 	return runTime;
@@ -68,8 +69,9 @@ long timer_get_current_time() {
 	return currentTime;
 }
 
-void _timer_setup() {
+void _timer_setup(void (*f)(bool)) {
 
+	_t_listener = f;
 	currentTime = millis();
 	currentStateStartTime = millis();
 	lastStepTime = millis();
@@ -79,7 +81,6 @@ void _timer_setup() {
 
 	runTime = 30000L; // 30 seconds
 	stopTime = 10000L * 60L; // 10 minutes
-
 }
 
 void _timer_loop(long milliseconds) {
@@ -92,7 +93,7 @@ void _timer_loop(long milliseconds) {
 	Serial.println(timer_get_display_time(currentTime));
 	if(currentTime <= 0) {
 		currentTime = 0;
-		// TODO: change motor state
+		_t_listener(!runningState);
 		timer_set_state(!runningState);
 	}
 }

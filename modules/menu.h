@@ -3,19 +3,23 @@
 
 //extern MenuBackend menu;
 
-#define MENU_MANUAL_OFF '1'
-#define MENU_MANUAL_ON '2'
-#define MENU_TIMER_ON '3'
-#define MENU_TIMER_OFF '3'
+#define MENU_ROOT '0'
+#define MENU_MANUAL '1'
+#define MENU_TIMER '4'
+
+#define MENU_MANUAL_SET_RUN_TIME '7'
+#define MENU_MANUAL_SET_STOP_TIME '8'
+
 
 void menu_up();
 void menu_down();
 void menu_right();
 void menu_left();
 void menu_select();
-void menu_exit();
+void menu_use(char menu);
 
 char menu_get_current();
+char menu_get_display();
 
 void _menu_setup();
 void _menu_loop(long milliseconds);

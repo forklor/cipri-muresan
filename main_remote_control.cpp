@@ -16,7 +16,56 @@
 // 	Serial.print("\n");
 // }
 
-void keypadPressed(char key) {
+
+void timerStateChanged(bool running) {
+	int all_addresses[6] = {
+		WIRELESS_MODULE_1,
+		WIRELESS_MODULE_2,
+		WIRELESS_MODULE_3,
+		WIRELESS_MODULE_4,
+		WIRELESS_MODULE_5,
+		WIRELESS_MODULE_6 
+	};
+
+	wirelessMessage msg;
+	msg.type = running ? MESSAGE_START : MESSAGE_STOP;
+	wireless_send_message(all_addresses, 6, msg);
+}
+
+void ok_pressed() {
+
+	if(menu_get_current() == MENU_ROOT) {
+
+		char currentMenu = menu_get_display();
+		if(currentMenu == MENU_MANUAL) {
+			display_show_message("SWITCHED", "TO MANUAL MODE", 1500);
+			if(!timer_is_paused()) {
+				timer_stop();
+			}
+		} else if (currentMenu == MENU_TIMER) {
+			display_show_message("SWITCHED", "TO TIMER MODE", 1500);
+			if(timer_is_paused()) {
+				timer_start();
+			}
+		}
+	}
+}
+
+void up_pressed() {
+
+	if(menu_get_current() == MENU_ROOT) {
+		menu_up();
+	}
+}
+
+void down_pressed() {
+
+	if(menu_get_current() == MENU_ROOT) {
+		menu_down();
+	}
+}
+
+void start_stop_all_pressed() {
 
 	int all_addresses[6] = {
 		WIRELESS_MODULE_1,
@@ -27,7 +76,49 @@ void keypadPressed(char key) {
 		WIRELESS_MODULE_6 
 	};
 
-	char currentMenu = menu_get_current();
+	char currentMenu = menu_get_display();
+	wirelessMessage msg;
+	bool validCommand = false;
+
+	if(currentMenu == MENU_MANUAL) {
+
+		if(timer_is_running()) {
+			display_show_message("STOPPING", "ALL MOTORS", 1500);
+			msg.type = MESSAGE_STOP;
+			timer_stop();
+			timer_set_state(false);
+			validCommand = true;	
+		} else {
+			menu_left();
+			display_show_message("STARTING", "ALL MOTORS", 1500);
+			msg.type = MESSAGE_START;
+			timer_stop();
+			timer_set_state(true);
+			validCommand = true;
+		}
+		
+	} else if(currentMenu == MENU_TIMER) {
+
+		if(timer_is_running()) {
+			display_show_message("STOPPING", "ALL MOTORS TIMER", 1500);
+			timer_set_state(false);
+			if(timer_is_paused()) timer_start();
+			msg.type = MESSAGE_START;
+			validCommand = true;
+		} else {
+			display_show_message("STARTING", "ALL MOTORS TIMER", 1500);
+			timer_set_state(true);
+			if(timer_is_paused()) timer_start();
+			msg.type = MESSAGE_START;
+			validCommand = true;
+		}
+	}
+	
+	if(validCommand) wireless_send_message(all_addresses, 6, msg);
+}
+
+void keypadPressed(char key) {
+
 	wirelessMessage msg;
 	switch(key) {
 		case '1':
@@ -49,46 +140,22 @@ void keypadPressed(char key) {
 			wireless_send_message(WIRELESS_MODULE_1, msg);
 			break;
 		case 'A':
-			if(currentMenu == MENU_TIMER_ON) {
-				menu_right();
-				display_show_message("STOPPING", "ALL MOTORS", 2000);
-				msg.type = MESSAGE_STOP;
-				timer_stop();
-			} else if(currentMenu == MENU_TIMER_OFF) {
-				menu_left();
-				display_show_message("STARTING", "ALL MOTORS", 2000);
-				msg.type = MESSAGE_START;
-				timer_stop();
-			} else if(currentMenu == MENU_MANUAL_ON) {
-				menu_right();
-				display_show_message("STOPPING", "ALL MOTORS TIMER", 2000);
-				timer_set_state(false);
-				if(timer_is_paused()) timer_start();
-				msg.type = MESSAGE_START;
-			} else if(currentMenu == MENU_MANUAL_OFF) {
-				menu_left();
-				display_show_message("STARTING", "ALL MOTORS TIMER", 2000);
-				timer_set_state(true);
-				if(timer_is_paused()) timer_start();
-				msg.type = MESSAGE_START;
-			}
-
-			wireless_send_message(all_addresses, 6, msg);
+			start_stop_all_pressed();
 			break;
 		case 'B':
-			menu_up();
+			up_pressed();
 			// Serial.println("Sending change direction message");
 			// msg.type = MESSAGE_CHANGE_DIRECTION;
 			// wireless_send_message(WIRELESS_MODULE_1, msg);
 			break;
 		case 'C':
-			menu_down();
+			down_pressed();
 			// Serial.println("Sending stop message");
 			// msg.type = MESSAGE_STOP;
 			// wireless_send_message(WIRELESS_MODULE_1, msg);
 			break;
 		case 'D':
-			menu_select();
+			ok_pressed();
 			// Serial.println("Sending start message");
 			// msg.type = MESSAGE_START;
 			// wireless_send_message(WIRELESS_MODULE_1, msg);
@@ -107,7 +174,7 @@ void _setup() {
 	_keypad_setup(keypadPressed);
 	_display_setup();
 	_menu_setup();
-	_timer_setup();
+	_timer_setup(timerStateChanged);
 }
 
 void _loop() {

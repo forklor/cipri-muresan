@@ -9,6 +9,8 @@
 
 void updateDisplay();
 
+char selectedMenu;
+
 /*
 	This is an important function
 	Here all use events are handled
@@ -18,6 +20,7 @@ void updateDisplay();
 void menuUseEventListener(MenuUseEvent used) {
 	Serial.print("Menu use ");
 	Serial.println(used.item.getName());
+	selectedMenu = used.item.getShortkey();
 }
 
 long lastStepMs;
@@ -37,35 +40,39 @@ void menuChangeEventListener(MenuChangeEvent changed) {
 }
 
 MenuBackend menu = MenuBackend(menuUseEventListener, menuChangeEventListener);
-//beneath is list of menu items needed to build the menu
-MenuItem mainTimer = MenuItem("Auto Timer", '0');
-MenuItem mainTimerOff = MenuItem("Auto Timer Stop", MENU_TIMER_OFF);
-MenuItem mainTimerOn = MenuItem("Auto Timer Off", MENU_TIMER_ON);
-MenuItem manualOff = MenuItem("Manual OFF", MENU_MANUAL_OFF);
-MenuItem manualOn = MenuItem("Manual ON", MENU_MANUAL_ON);
+
+MenuItem mainTimer = MenuItem("Auto Timer", MENU_TIMER);
+MenuItem mainManual = MenuItem("Manual", MENU_MANUAL);
+
+MenuItem manualRunTime = MenuItem("Set Run Time", MENU_MANUAL_SET_RUN_TIME);
+MenuItem manualStopTime = MenuItem("Set Stop Time", MENU_MANUAL_SET_STOP_TIME);
 
 void updateDisplay() {
-	display_lcd.clear();
-	display_lcd.setCursor(0, 0);
 
-	if(!timer_is_paused()) {
-		if(timer_is_running()) {
-			display_lcd.print(timer_get_display_time(timer_get_current_time()));
-			display_lcd.setCursor(8, 0);
-			display_lcd.print(timer_get_display_time(timer_get_stop_time()));
+	if(menu.getCurrent().getShortkey() == MENU_TIMER || menu.getCurrent().getShortkey() == MENU_MANUAL) {
+		display_lcd.clear();
+		display_lcd.setCursor(0, 0);
+
+		if(!timer_is_paused()) {
+			if(timer_is_running()) {
+				display_lcd.print(timer_get_display_time(timer_get_current_time()));
+				display_lcd.setCursor(8, 0);
+				display_lcd.print(timer_get_display_time(timer_get_stop_time()));
+			} else {
+				display_lcd.print(timer_get_display_time(timer_get_run_time()));
+				display_lcd.setCursor(8, 0);
+				display_lcd.print(timer_get_display_time(timer_get_current_time()));
+			}
 		} else {
 			display_lcd.print(timer_get_display_time(timer_get_run_time()));
 			display_lcd.setCursor(8, 0);
-			display_lcd.print(timer_get_display_time(timer_get_current_time()));
+			display_lcd.print(timer_get_display_time(timer_get_stop_time()));
 		}
-	} else {
-		display_lcd.print(timer_get_display_time(timer_get_run_time()));
-		display_lcd.setCursor(8, 0);
-		display_lcd.print(timer_get_display_time(timer_get_stop_time()));
+		
+		display_lcd.setCursor(0, 1);
+		String state = timer_is_running() ? " ON" : " OFF";
+		display_lcd.print(menu.getCurrent().getName() + state);
 	}
-	
-	display_lcd.setCursor(0, 1);
-	display_lcd.print(menu.getCurrent().getName());
 }
 
 
@@ -93,25 +100,28 @@ void menu_select() {
 	menu.use();
 }
 
-void menu_exit() {
-	menu.use('0');
+void menu_use(char menuName) {
+	menu.use(menuName);
 }
 
 void _menu_setup() {
 
+	selectedMenu = MENU_ROOT;
 	lastStepMs = millis();
-	menu.getRoot().add(manualOff);
-	manualOff.addAfter(mainTimer);
-	manualOff.addRight(manualOn);
-	manualOn.addRight(manualOff);
-	mainTimer.addRight(mainTimerOn);
-	mainTimerOn.addAfter(mainTimerOff);
-	mainTimer.addAfter(manualOff);
+
+	menu.getRoot().add(mainManual);
+	mainManual.addAfter(mainTimer);
+	mainTimer.addAfter(mainManual);
 
 	menu.moveDown();
 }
 
 char menu_get_current() {
+	return selectedMenu;
+}
+
+char menu_get_display() {
+	Serial.println(menu.getCurrent().getName());
 	return menu.getCurrent().getShortkey();
 }
 
