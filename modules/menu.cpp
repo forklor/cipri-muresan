@@ -13,7 +13,8 @@ char selectedMenu;
 
 void menuUseEventListener(MenuUseEvent used) {
 	Serial.print("Menu use ");
-	Serial.println(used.item.getName());
+	Serial.print(used.item.getName());
+	Serial.println(used.item.getShortkey());
 	selectedMenu = used.item.getShortkey();
 }
 
@@ -101,6 +102,11 @@ void _menu_setup() {
 	menu.getRoot().add(mainManual);
 	mainManual.addAfter(mainTimer);
 	mainTimer.addAfter(mainManual);
+
+	mainManual.addLeft(manualRunTime);
+	mainTimer.addLeft(manualRunTime);
+	manualRunTime.addAfter(manualStopTime);
+	manualStopTime.addAfter(manualRunTime);
 
 	menu.moveDown();
 }

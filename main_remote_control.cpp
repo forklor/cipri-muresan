@@ -25,40 +25,101 @@ void timerStateChanged(bool running) {
 	wireless_send_message(all_addresses, 6, msg);
 }
 
+long timerValue;
+
+void setTimerValueUp() {
+	timerValue += 1000;
+	display_lcd.setCursor(0, 0);
+	display_lcd.print(timer_get_display_time(timerValue));
+}
+
+void setTimerValueDown() {
+	timerValue -= 1000;
+	display_lcd.setCursor(0, 0);
+	display_lcd.print(timer_get_display_time(timerValue));
+}
+
+void startSettingTimeValue(long value, char *displayName) {
+	
+	timerValue = value;
+
+	display_lcd.clear();
+	display_lcd.setCursor(0, 0);
+	display_lcd.print(timer_get_display_time(timerValue));
+	display_lcd.setCursor(0, 1);
+	display_lcd.print(displayName);
+}
+
 void ok_pressed() {
 
-	if(menu_get_current() == MENU_ROOT) {
+	char currentMenu = menu_get_current();
+	if(currentMenu == MENU_ROOT) {
 
-		char currentMenu = menu_get_display();
-		if(currentMenu == MENU_MANUAL) {
+		char displayMenu = menu_get_display();
+		if(displayMenu == MENU_MANUAL) {
 			display_show_message("SWITCHED", "TO MANUAL MODE", 1500);
 			if(!timer_is_paused()) {
 				timer_stop();
 			}
-		} else if (currentMenu == MENU_TIMER) {
+		} else if (displayMenu == MENU_TIMER) {
 			display_show_message("SWITCHED", "TO TIMER MODE", 1500);
 			if(timer_is_paused()) {
 				timer_start();
 			}
+		}
+	} else if(currentMenu == MENU_MANUAL_SET_RUN_TIME) {
+		char displayMenu = menu_get_display();
+		if(displayMenu == MENU_MANUAL_SET_RUN_TIME) {
+			timer_set_run_time(timerValue);
+			menu_down();
+			startSettingTimeValue(timer_get_stop_time(), "MOTOR STOP TIME");
+		} else {
+			timer_set_stop_time(timerValue);
+			menu_down();
+			startSettingTimeValue(timer_get_run_time(), "MOTOR RUN TIME");
 		}
 	}
 }
 
 void up_pressed() {
 
-	if(menu_get_current() == MENU_ROOT) {
+	char current = menu_get_current();
+	if(current == MENU_ROOT) {
 		menu_up();
+	}
+
+	Serial.println(current);
+
+	if(current == MENU_MANUAL_SET_RUN_TIME) {
+		setTimerValueUp();
 	}
 }
 
 void down_pressed() {
 
-	if(menu_get_current() == MENU_ROOT) {
+	char current = menu_get_current();
+	if(current == MENU_ROOT) {
 		menu_down();
+	}
+
+	if(current == MENU_MANUAL_SET_RUN_TIME) {
+		setTimerValueDown();
 	}
 }
 
 void start_stop_all_pressed() {
+
+	char currentMenu = menu_get_current();
+	if(currentMenu == MENU_MANUAL_SET_RUN_TIME) {
+		menu_use(MENU_ROOT);
+		menu_down();
+		// Move to auto timer mode if timer is running
+		if(!timer_is_paused()) {
+			menu_down()
+		}
+
+		return;
+	}
 
 	int all_addresses[6] = {
 		WIRELESS_MODULE_1,
@@ -69,11 +130,12 @@ void start_stop_all_pressed() {
 		WIRELESS_MODULE_6 
 	};
 
-	char currentMenu = menu_get_display();
 	wirelessMessage msg;
 	bool validCommand = false;
+	char displayMenu = menu_get_display();
 
-	if(currentMenu == MENU_MANUAL) {
+
+	if(displayMenu == MENU_MANUAL) {
 
 		if(timer_is_running()) {
 			display_show_message("STOPPING", "ALL MOTORS", 1500);
@@ -82,7 +144,6 @@ void start_stop_all_pressed() {
 			timer_set_state(false);
 			validCommand = true;	
 		} else {
-			menu_left();
 			display_show_message("STARTING", "ALL MOTORS", 1500);
 			msg.type = MESSAGE_START;
 			timer_stop();
@@ -90,7 +151,7 @@ void start_stop_all_pressed() {
 			validCommand = true;
 		}
 		
-	} else if(currentMenu == MENU_TIMER) {
+	} else if(displayMenu == MENU_TIMER) {
 
 		if(timer_is_running()) {
 			display_show_message("STOPPING", "ALL MOTORS TIMER", 1500);
@@ -113,25 +174,32 @@ void start_stop_all_pressed() {
 
 void keyReleased(char key) {
 	wirelessMessage msg;
+	char currentMenu = menu_get_current();
 	switch(key) {
 		case '1':
-			msg.type = MESSAGE_TOGGLE_START_STOP;
-			wireless_send_message(WIRELESS_MODULE_1, msg);
-			break;
+			if(currentMenu == MENU_ROOT) {
+				msg.type = MESSAGE_TOGGLE_START_STOP;
+				wireless_send_message(WIRELESS_MODULE_1, msg);
+				break;
+			}
 		case '4':
-			msg.type = MESSAGE_CHANGE_DIRECTION;
-			wireless_send_message(WIRELESS_MODULE_1, msg);
-			break;
+			if(currentMenu == MENU_ROOT) {
+				msg.type = MESSAGE_CHANGE_DIRECTION;
+				wireless_send_message(WIRELESS_MODULE_1, msg);
+				break;
+			}
 		case '7':
-			msg.type = MESSAGE_SET_PARAMS;
-			msg.parameters = {
-				50,
-				5,
-				3,
-				15
-			};
-			wireless_send_message(WIRELESS_MODULE_1, msg);
-			break;
+			if(currentMenu == MENU_ROOT) {
+				msg.type = MESSAGE_SET_PARAMS;
+				msg.parameters = {
+					50,
+					5,
+					3,
+					15
+				};
+				wireless_send_message(WIRELESS_MODULE_1, msg);
+				break;
+			}
 		case 'A':
 			start_stop_all_pressed();
 			break;
@@ -160,7 +228,9 @@ void keyReleased(char key) {
 }
 
 void start_program_timer() {
-	Serial.println("Programming timer");
+	menu_left();
+	menu_select();
+	startSettingTimeValue(timer_get_run_time(), "MOTOR RUN TIME");
 }
 
 void start_program_motor(int motorNo) {
@@ -203,17 +273,6 @@ void keypadListener(Key *keys, int keysLen) {
 				}
 			}
 		}
-	}
-
-	Serial.print("====");
-	Serial.println(keysLen);
-	for(int i = 0; i<keysLen; i++) {
-		Serial.print(i);
-		Serial.print("key ");
-		Serial.print(keys[i].kchar);
-		Serial.print(" ");
-		char *msg = keys[i].kstate == PRESSED ? "PRESSED" : (keys[i].kstate == HOLD ? "HOLD" : (keys[i].kstate == RELEASED ? "RELEASED" : "IDLE"));
-		Serial.println(msg);
 	}
 }
 

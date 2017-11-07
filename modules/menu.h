@@ -3,12 +3,12 @@
 
 //extern MenuBackend menu;
 
-#define MENU_ROOT '0'
+#define MENU_ROOT '\0'
 #define MENU_MANUAL '1'
-#define MENU_TIMER '4'
+#define MENU_TIMER '2'
 
-#define MENU_MANUAL_SET_RUN_TIME '7'
-#define MENU_MANUAL_SET_STOP_TIME '8'
+#define MENU_MANUAL_SET_RUN_TIME '3'
+#define MENU_MANUAL_SET_STOP_TIME '4'
 
 
 void menu_up();
