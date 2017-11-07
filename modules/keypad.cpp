@@ -1,4 +1,4 @@
-#include <Keypad.h>
+#include "keypad.h"
 
 const byte ROWS = 4; //four rows
 const byte COLS = 4; //three columns
@@ -15,16 +15,29 @@ byte colPins[COLS] = {6, 7, 8, 9}; //connect to the column pinouts of the keypad
 
 Keypad keypad = Keypad( makeKeymap(keys), rowPins, colPins, ROWS, COLS );
 
-void (*_k_listener)(char pressed);
+void (*_k_listener)(Key *keys, int keysLen);
 
-void _keypad_setup(void (*f)(char)) {
+void _keypad_setup(void (*f)(Key *, int)){
+	keypad.setHoldTime(5000);
 	_k_listener = f;
 }
 
 void _keypad_loop(long milliseconds) {
-	char key = keypad.getKey();
 
-	if (key != NO_KEY) {
-		_k_listener(key);
+	int changedKeysLen = 0;
+	if (keypad.getKeys()) {
+		bool hasChanges = false;
+		Key changedKeys[10] = {};
+		for (int i=0; i<LIST_MAX; i++) {
+			if (keypad.key[i].kstate != IDLE) {
+				changedKeys[changedKeysLen] = keypad.key[i];
+				changedKeysLen += 1;
+				
+				if(!hasChanges && keypad.key[i].stateChanged) hasChanges = true;
+			}
+		}
+		if(hasChanges && changedKeysLen > 0) {
+			_k_listener(changedKeys, changedKeysLen);
+		}
 	}
 }

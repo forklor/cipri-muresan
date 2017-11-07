@@ -11,12 +11,6 @@ void updateDisplay();
 
 char selectedMenu;
 
-/*
-	This is an important function
-	Here all use events are handled
-	
-	This is where you define a behaviour for a menu item
-*/
 void menuUseEventListener(MenuUseEvent used) {
 	Serial.print("Menu use ");
 	Serial.println(used.item.getName());
@@ -25,11 +19,6 @@ void menuUseEventListener(MenuUseEvent used) {
 
 long lastStepMs;
 
-/*
-	This is an important function
-	Here we get a notification whenever the user changes the menu
-	That is, when the menu is navigated
-*/
 void menuChangeEventListener(MenuChangeEvent changed) {
 
 	updateDisplay();
@@ -68,7 +57,7 @@ void updateDisplay() {
 			display_lcd.setCursor(8, 0);
 			display_lcd.print(timer_get_display_time(timer_get_stop_time()));
 		}
-		
+
 		display_lcd.setCursor(0, 1);
 		String state = timer_is_running() ? " ON" : " OFF";
 		display_lcd.print(menu.getCurrent().getName() + state);

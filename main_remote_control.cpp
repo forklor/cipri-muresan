@@ -10,13 +10,6 @@
 #include "modules/menu.h"
 #include "modules/timer.h"
 
-// void rc_wirelessMessageReceived(wirelessMessage message) {
-// 	Serial.print("received message");
-// 	Serial.print(message.type);
-// 	Serial.print("\n");
-// }
-
-
 void timerStateChanged(bool running) {
 	int all_addresses[6] = {
 		WIRELESS_MODULE_1,
@@ -117,8 +110,8 @@ void start_stop_all_pressed() {
 	if(validCommand) wireless_send_message(all_addresses, 6, msg);
 }
 
-void keypadPressed(char key) {
 
+void keyReleased(char key) {
 	wirelessMessage msg;
 	switch(key) {
 		case '1':
@@ -166,12 +159,70 @@ void keypadPressed(char key) {
 	}
 }
 
+void start_program_timer() {
+	Serial.println("Programming timer");
+}
+
+void start_program_motor(int motorNo) {
+	Serial.print("Programming motor");
+	Serial.println(motorNo);
+}
+
+void keypadListener(Key *keys, int keysLen) {
+
+	if(keysLen == 1) {
+		Key key = keys[0];
+		if(key.kstate == RELEASED) {
+			keyReleased(key.kchar);
+		}
+	} else if(keysLen == 2) {
+		bool okHold = false;
+		for(int i = 0; i<keysLen; i++) {
+			if(keys[i].kchar == 'D' && keys[i].kstate == HOLD) {
+				okHold = true;
+				break;
+			}
+		}
+
+		for(int i = 0; i<keysLen; i++) {
+			if(keys[i].kstate == HOLD) {
+				switch(keys[i].kchar) {
+					case 'A':
+						start_program_timer();
+					break;
+
+					case '1':
+					case '2':
+					case '3':
+					case '4':
+					case '5':
+					case '6':
+						int motorNumber = keys[i].kchar - '0';
+						start_program_motor(motorNumber);
+					break;
+				}
+			}
+		}
+	}
+
+	Serial.print("====");
+	Serial.println(keysLen);
+	for(int i = 0; i<keysLen; i++) {
+		Serial.print(i);
+		Serial.print("key ");
+		Serial.print(keys[i].kchar);
+		Serial.print(" ");
+		char *msg = keys[i].kstate == PRESSED ? "PRESSED" : (keys[i].kstate == HOLD ? "HOLD" : (keys[i].kstate == RELEASED ? "RELEASED" : "IDLE"));
+		Serial.println(msg);
+	}
+}
+
 void _setup() {
 
 	Serial.begin(9600);
 	Serial.println("Remote control program running");
 	_wireless_setup(A0, A1, WIRELESS_REMOTE);
-	_keypad_setup(keypadPressed);
+	_keypad_setup(keypadListener);
 	_display_setup();
 	_menu_setup();
 	_timer_setup(timerStateChanged);
