@@ -168,7 +168,16 @@ void _motor_loop(long milliseconds) {
 	bool changed = false;
 	if(_currentDirection == _targetDirection) {
 		if(_currentSpeed != _targetSpeed) {
-			int diff = _targetSpeed > _currentSpeed ? settings.acceleration : -(settings.acceleration * (1 / (settings.decelerationPercentage / 100)));
+			int diff;
+			if(_targetSpeed > _currentSpeed) {
+				int max = _targetSpeed - _currentSpeed;
+				int step = settings.acceleration;
+				diff = MIN(step, max);
+			} else {
+				int max = _targetSpeed - _currentSpeed;
+				int step = -(settings.acceleration * (1 / (settings.decelerationPercentage / 100)));
+				diff = MAX(step, max);
+			}
 			_currentSpeed += diff;
 			changed = true;
 		} else if(_targetSpeed > 0 && milliseconds - _directionChangeMillis >= settings.changeDirTime) {

@@ -37,23 +37,23 @@ void displayMotorStatus() {
 	updatingMotorStatus = true;
 	display_lcd.clear();
 	display_lcd.setCursor(0, 0);
-	display_lcd.print("M STATUS ");
+	display_lcd.print("M1 STATUS ");
 	display_lcd.setCursor(9, 0);
 	display_lcd.print(selectedMotorNumber);
 	display_lcd.setCursor(10, 0);
-	display_lcd.print("S:");
+	display_lcd.print("S=");
 	display_lcd.setCursor(12, 0);
 	display_lcd.print(currentMotorStatus.speed);
 	display_lcd.setCursor(0, 1);
-	display_lcd.print("D:");
+	display_lcd.print("D=");
 	display_lcd.setCursor(2, 1);
 	display_lcd.print(currentMotorStatus.direction);
 	display_lcd.setCursor(3, 1);
-	display_lcd.print("C:");
+	display_lcd.print("C=");
 	display_lcd.setCursor(5, 1);
 	display_lcd.print(currentMotorStatus.cs1);
 	display_lcd.setCursor(9, 1);
-	display_lcd.print("C:");
+	display_lcd.print("C=");
 	display_lcd.setCursor(11, 1);
 	display_lcd.print(currentMotorStatus.cs2);
 	lastUpdateStatusTime = millis();
@@ -68,7 +68,7 @@ void setTimerValueUp() {
 }
 
 void setTimerValueDown() {
-	timerValue -= 1000;
+	if(timerValue > 0) timerValue -= 1000;
 	display_lcd.setCursor(0, 0);
 	display_lcd.print(timer_get_display_time(timerValue));
 }
@@ -84,22 +84,25 @@ void startSettingTimeValue(long value, char *displayName) {
 	display_lcd.print(displayName);
 }
 
-
 int decimalVal;
 void setDecimalValueUp() {
-	timerValue += 1;
+	decimalVal += 1;
+	display_lcd.setCursor(0, 0);
+	display_lcd.print("                ");
 	display_lcd.setCursor(0, 0);
 	display_lcd.print(decimalVal);
 }
 
 void setDecimalValueDown() {
-	decimalVal -= 1;
+
+	if(decimalVal > 0) decimalVal -= 1;
+	display_lcd.setCursor(0, 0);
+	display_lcd.print("                ");
 	display_lcd.setCursor(0, 0);
 	display_lcd.print(decimalVal);
 }
 
 void startSettingDecimalValue(long value, char *displayName) {
-
 	decimalVal = value;
 	display_lcd.clear();
 	display_lcd.setCursor(0, 0);
@@ -112,25 +115,30 @@ void updateInputMotorParameters() {
 
 	if(menu_get_current() == MENU_SET_MOTOR_SPEED) {
 		char displayMenu = menu_get_display();
+		char displayName[16] = "";
 		switch(displayMenu) {
 			case MENU_SET_MOTOR_SPEED:
-				startSettingDecimalValue(settingParameters.maxSpeed, "SPEED MOTOR ");
+				sprintf(displayName, "SPEED %d", selectedMotorNumber);
+				startSettingDecimalValue(settingParameters.maxSpeed, displayName);
 				break;
-
 			case MENU_SET_MOTOR_ACCELERATION:
-				startSettingDecimalValue(settingParameters.acceleration, "ACCELERATION MOTOR ");
+				sprintf(displayName, "ACCELERATION %d", selectedMotorNumber);
+				startSettingDecimalValue(settingParameters.acceleration, displayName);
 				break;
 
 			case MENU_SET_MOTOR_DECELERATION:
-				startSettingDecimalValue(settingParameters.decelerationPercentage, "DECELERATION MOTOR ");
+				sprintf(displayName, "DECELER. %d (%%)", selectedMotorNumber);
+				startSettingDecimalValue(settingParameters.decelerationPercentage, displayName);
 				break;
 
 			case MENU_SET_MOTOR_CS:
-				startSettingDecimalValue(settingParameters.csThreshold, "CURRENT MOTOR ");
+				sprintf(displayName, "CURRENT %d", selectedMotorNumber);
+				startSettingDecimalValue(settingParameters.csThreshold, displayName);
 				break;
 
 			case MENU_SET_MOTOR_CHANGE_TIME:
-				startSettingTimeValue(settingParameters.changeDirTime, "TIME MOTOR ");
+				sprintf(displayName, "CHANGE TIME %d", selectedMotorNumber);
+				startSettingTimeValue(settingParameters.changeDirTime, displayName);
 				break;
 			case MENU_GET_MOTOR_STATUS:
 				displayMotorStatus();
@@ -180,12 +188,12 @@ void ok_pressed() {
 	if(currentMenu == MENU_ROOT) {
 
 		char displayMenu = menu_get_display();
-		if(displayMenu == MENU_MANUAL) {
+		if(displayMenu == MENU_MANUAL && !timer_is_paused()) {
 			display_show_message("SWITCHED", "TO MANUAL MODE", 1500);
 			if(!timer_is_paused()) {
 				timer_stop();
 			}
-		} else if (displayMenu == MENU_TIMER) {
+		} else if (displayMenu == MENU_TIMER && timer_is_paused()) {
 			display_show_message("SWITCHED", "TO TIMER MODE", 1500);
 			if(timer_is_paused()) {
 				timer_start();
@@ -384,11 +392,66 @@ void keyReleased(char key) {
 				wireless_send_message(WIRELESS_MODULE_1, msg);
 				break;
 			}
+		case '2':
+			if(currentMenu == MENU_ROOT) {
+				msg.type = MESSAGE_TOGGLE_START_STOP;
+				wireless_send_message(WIRELESS_MODULE_2, msg);
+				break;
+			}
+		case '5':
+			if(currentMenu == MENU_ROOT) {
+				msg.type = MESSAGE_CHANGE_DIRECTION;
+				wireless_send_message(WIRELESS_MODULE_2, msg);
+				break;
+			}
+		case '3':
+			if(currentMenu == MENU_ROOT) {
+				msg.type = MESSAGE_TOGGLE_START_STOP;
+				wireless_send_message(WIRELESS_MODULE_3, msg);
+				break;
+			}
+		case '6':
+			if(currentMenu == MENU_ROOT) {
+				msg.type = MESSAGE_CHANGE_DIRECTION;
+				wireless_send_message(WIRELESS_MODULE_3, msg);
+				break;
+			}
+		case '*':
+			if(currentMenu == MENU_ROOT) {
+				msg.type = MESSAGE_TOGGLE_START_STOP;
+				wireless_send_message(WIRELESS_MODULE_4, msg);
+				break;
+			}
 		case '7':
 			if(currentMenu == MENU_ROOT) {
 
 				msg.type = MESSAGE_MOTOR_STATUS;
-				wireless_send_message(WIRELESS_MODULE_1, msg);
+				wireless_send_message(WIRELESS_MODULE_4, msg);
+				break;
+			}
+		case '0':
+			if(currentMenu == MENU_ROOT) {
+				msg.type = MESSAGE_TOGGLE_START_STOP;
+				wireless_send_message(WIRELESS_MODULE_5, msg);
+				break;
+			}
+		case '8':
+			if(currentMenu == MENU_ROOT) {
+				msg.type = MESSAGE_MOTOR_STATUS;
+				wireless_send_message(WIRELESS_MODULE_5, msg);
+				break;
+			}
+		case '#':
+			if(currentMenu == MENU_ROOT) {
+				msg.type = MESSAGE_TOGGLE_START_STOP;
+				wireless_send_message(WIRELESS_MODULE_6, msg);
+				break;
+			}
+		case '9':
+			if(currentMenu == MENU_ROOT) {
+
+				msg.type = MESSAGE_MOTOR_STATUS;
+				wireless_send_message(WIRELESS_MODULE_6, msg);
 				break;
 			}
 		case 'A':
@@ -432,16 +495,21 @@ void keypadListener(Key *keys, int keysLen) {
 	if(keysLen == 1) {
 		Key key = keys[0];
 		if(key.kstate == RELEASED) {
-			keyReleased(key.kchar);
+			if(!keypad_is_keyhold(key)) {
+				keyReleased(key.kchar);
+			}
+			keypad_remove_keyhold(key);
 		}
 		// OK pressed for 5 seconds
 		if(key.kstate == HOLD && key.kchar == 'D') {
+			keypad_add_keyhold(key);
 			start_program_timer();
 		}
 	} else if(keysLen == 2) {
 		bool okHold = false;
 		for(int i = 0; i<keysLen; i++) {
 			if(keys[i].kchar == 'D' && keys[i].kstate == HOLD) {
+				keypad_add_keyhold(keys[i]);
 				okHold = true;
 				break;
 			}
@@ -449,6 +517,7 @@ void keypadListener(Key *keys, int keysLen) {
 
 		for(int i = 0; i<keysLen; i++) {
 			if(keys[i].kstate == HOLD) {
+				keypad_add_keyhold(keys[i]);
 				switch(keys[i].kchar) {
 					case '1':
 					case '2':
@@ -456,8 +525,10 @@ void keypadListener(Key *keys, int keysLen) {
 					case '4':
 					case '5':
 					case '6':
-						int motorNumber = keys[i].kchar - '0';
-						start_program_motor(motorNumber);
+						if(okHold) {
+							int motorNumber = keys[i].kchar - '0';
+							start_program_motor(motorNumber);
+						}
 					break;
 				}
 			}

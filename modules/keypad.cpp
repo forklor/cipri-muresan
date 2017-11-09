@@ -17,9 +17,26 @@ Keypad keypad = Keypad( makeKeymap(keys), rowPins, colPins, ROWS, COLS );
 
 void (*_k_listener)(Key *keys, int keysLen);
 
+bool holdKeys[16];
+
+void keypad_add_keyhold(Key key) {
+	holdKeys[key.kcode] = true;
+}
+
+bool keypad_is_keyhold(Key key) {
+	return holdKeys[key.kcode];
+}
+
+void keypad_remove_keyhold(Key key) {
+	holdKeys[key.kcode] = false;
+}
+
 void _keypad_setup(void (*f)(Key *, int)){
 	keypad.setHoldTime(5000);
 	_k_listener = f;
+	for(int i = 0; i< 16; i++) {
+		holdKeys[i] = false;
+	}
 }
 
 void _keypad_loop(long milliseconds) {

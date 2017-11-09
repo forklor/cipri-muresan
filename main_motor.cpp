@@ -16,6 +16,12 @@ wirelessMessage m_wirelessMessageReceived(wirelessMessage message) {
 			motor_toggle_start_stop();
 			break;
 		case MESSAGE_SET_PARAMS:
+			Serial.print(F("speed:"));
+			Serial.print(message.parameters.maxSpeed);
+			Serial.print(F("acc:"));
+			Serial.print(message.parameters.acceleration);
+			Serial.print(F("decc:"));	
+			Serial.println(message.parameters.decelerationPercentage);
 			motor_set_parameters(message.parameters);
 			break;
 		case MESSAGE_GET_PARAMS:
