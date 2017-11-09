@@ -10,6 +10,8 @@
 #include "modules/menu.h"
 #include "modules/timer.h"
 
+#define UPDATE_MOTOR_STATUS_MS 800
+
 void timerStateChanged(bool running) {
 	int all_addresses[6] = {
 		WIRELESS_MODULE_1,
@@ -17,12 +19,44 @@ void timerStateChanged(bool running) {
 		WIRELESS_MODULE_3,
 		WIRELESS_MODULE_4,
 		WIRELESS_MODULE_5,
-		WIRELESS_MODULE_6 
+		WIRELESS_MODULE_6
 	};
 
 	wirelessMessage msg;
 	msg.type = running ? MESSAGE_START : MESSAGE_STOP;
 	wireless_send_message(all_addresses, 6, msg);
+}
+
+motorStatus currentMotorStatus;
+bool updatingMotorStatus;
+long lastUpdateStatusTime;
+motorParameters settingParameters;
+int selectedMotorNumber;
+
+void displayMotorStatus() {
+	updatingMotorStatus = true;
+	display_lcd.clear();
+	display_lcd.setCursor(0, 0);
+	display_lcd.print("M STATUS ");
+	display_lcd.setCursor(9, 0);
+	display_lcd.print(selectedMotorNumber);
+	display_lcd.setCursor(10, 0);
+	display_lcd.print("S:");
+	display_lcd.setCursor(12, 0);
+	display_lcd.print(currentMotorStatus.speed);
+	display_lcd.setCursor(0, 1);
+	display_lcd.print("D:");
+	display_lcd.setCursor(2, 1);
+	display_lcd.print(currentMotorStatus.direction);
+	display_lcd.setCursor(3, 1);
+	display_lcd.print("C:");
+	display_lcd.setCursor(5, 1);
+	display_lcd.print(currentMotorStatus.cs1);
+	display_lcd.setCursor(9, 1);
+	display_lcd.print("C:");
+	display_lcd.setCursor(11, 1);
+	display_lcd.print(currentMotorStatus.cs2);
+	lastUpdateStatusTime = millis();
 }
 
 long timerValue;
@@ -40,7 +74,7 @@ void setTimerValueDown() {
 }
 
 void startSettingTimeValue(long value, char *displayName) {
-	
+
 	timerValue = value;
 
 	display_lcd.clear();
@@ -50,10 +84,67 @@ void startSettingTimeValue(long value, char *displayName) {
 	display_lcd.print(displayName);
 }
 
+
+int decimalVal;
+void setDecimalValueUp() {
+	timerValue += 1;
+	display_lcd.setCursor(0, 0);
+	display_lcd.print(decimalVal);
+}
+
+void setDecimalValueDown() {
+	decimalVal -= 1;
+	display_lcd.setCursor(0, 0);
+	display_lcd.print(decimalVal);
+}
+
+void startSettingDecimalValue(long value, char *displayName) {
+
+	decimalVal = value;
+	display_lcd.clear();
+	display_lcd.setCursor(0, 0);
+	display_lcd.print(decimalVal);
+	display_lcd.setCursor(0, 1);
+	display_lcd.print(displayName);
+}
+
+void updateInputMotorParameters() {
+
+	if(menu_get_current() == MENU_SET_MOTOR_SPEED) {
+		char displayMenu = menu_get_display();
+		switch(displayMenu) {
+			case MENU_SET_MOTOR_SPEED:
+				startSettingDecimalValue(settingParameters.maxSpeed, "SPEED MOTOR ");
+				break;
+
+			case MENU_SET_MOTOR_ACCELERATION:
+				startSettingDecimalValue(settingParameters.acceleration, "ACCELERATION MOTOR ");
+				break;
+
+			case MENU_SET_MOTOR_DECELERATION:
+				startSettingDecimalValue(settingParameters.decelerationProportion, "DECELERATION MOTOR ");
+				break;
+
+			case MENU_SET_MOTOR_CS:
+				startSettingDecimalValue(settingParameters.csThreshold, "CURRENT MOTOR ");
+				break;
+
+			case MENU_SET_MOTOR_CHANGE_TIME:
+				startSettingTimeValue(settingParameters.changeDirTime, "TIME MOTOR ");
+				break;
+			case MENU_GET_MOTOR_STATUS:
+				displayMotorStatus();
+				break;
+		}
+	}
+}
+
 void rc_wirelessMessageAckReceived(wirelessMessage message) {
 	Serial.print("received ack message ");
 	Serial.println(message.type);
-	if(message.type == MESSAGE_GET_PARAMS) {
+	if(message.type == MESSAGE_GET_PARAMS && menu_get_current() == MENU_SET_MOTOR_SPEED) {
+		settingParameters = message.parameters;
+		updateInputMotorParameters();
 		Serial.print("s: ");
 		Serial.print(message.parameters.maxSpeed);
 		Serial.print(" a: ");
@@ -64,9 +155,14 @@ void rc_wirelessMessageAckReceived(wirelessMessage message) {
 		Serial.print(message.parameters.csThreshold);
 		Serial.print(" t: ");
 		Serial.println(message.parameters.changeDirTime);
-
 	}
-	if(message.type == MESSAGE_MOTOR_STATUS) {
+
+	if(message.type == MESSAGE_MOTOR_STATUS
+		&& updatingMotorStatus
+		&& menu_get_current() == MENU_SET_MOTOR_SPEED
+		&& menu_get_display() == MENU_GET_MOTOR_STATUS) {
+		currentMotorStatus = message.status;
+		displayMotorStatus();
 		Serial.print("s: ");
 		Serial.print(message.status.speed);
 		Serial.print(" d: ");
@@ -106,6 +202,47 @@ void ok_pressed() {
 			menu_down();
 			startSettingTimeValue(timer_get_run_time(), "MOTOR RUN TIME");
 		}
+	} else if(currentMenu == MENU_SET_MOTOR_SPEED) {
+		char displayMenu = menu_get_display();
+		// Save previously set item
+		bool updateParams = true;
+		switch(displayMenu) {
+			case MENU_SET_MOTOR_SPEED:
+				settingParameters.maxSpeed = decimalVal;
+				break;
+			case MENU_SET_MOTOR_ACCELERATION:
+				settingParameters.acceleration = decimalVal;
+				break;
+			case MENU_SET_MOTOR_DECELERATION:
+				settingParameters.decelerationProportion = decimalVal;
+				break;
+			case MENU_SET_MOTOR_CS:
+				settingParameters.csThreshold = decimalVal;
+				break;
+			case MENU_SET_MOTOR_CHANGE_TIME:
+				settingParameters.changeDirTime = timerValue;
+				break;
+			default:
+				updateParams = false;
+				break;
+		}
+
+		if(updateParams) {
+			wirelessMessage msg;
+			msg.type = MESSAGE_SET_PARAMS;
+			msg.parameters = settingParameters;
+			wireless_send_message(selectedMotorNumber, msg);
+		}
+
+		menu_down();
+		displayMenu = menu_get_display();
+		if(displayMenu == MENU_GET_MOTOR_STATUS) {
+			currentMotorStatus = { 0, 0, 0, 0 };
+			updatingMotorStatus = true;
+		} else {
+			updatingMotorStatus = false;
+		}
+		updateInputMotorParameters();
 	}
 }
 
@@ -116,10 +253,25 @@ void up_pressed() {
 		menu_up();
 	}
 
-	Serial.println(current);
 
 	if(current == MENU_MANUAL_SET_RUN_TIME) {
 		setTimerValueUp();
+	}
+
+	if(current == MENU_SET_MOTOR_SPEED) {
+		switch(menu_get_display()) {
+			case MENU_SET_MOTOR_SPEED:
+			case MENU_SET_MOTOR_ACCELERATION:
+			case MENU_SET_MOTOR_DECELERATION:
+			case MENU_SET_MOTOR_CS:
+				setDecimalValueUp();
+				break;
+			case MENU_SET_MOTOR_CHANGE_TIME:
+				setTimerValueUp();
+				break;
+			default:
+				break;
+		}
 	}
 }
 
@@ -133,12 +285,29 @@ void down_pressed() {
 	if(current == MENU_MANUAL_SET_RUN_TIME) {
 		setTimerValueDown();
 	}
+
+	if(current == MENU_SET_MOTOR_SPEED) {
+		switch(menu_get_display()) {
+			case MENU_SET_MOTOR_SPEED:
+			case MENU_SET_MOTOR_ACCELERATION:
+			case MENU_SET_MOTOR_DECELERATION:
+			case MENU_SET_MOTOR_CS:
+				setDecimalValueDown();
+				break;
+			case MENU_SET_MOTOR_CHANGE_TIME:
+				setTimerValueDown();
+				break;
+			default:
+				break;
+		}
+	}
 }
 
 void start_stop_all_pressed() {
 
 	char currentMenu = menu_get_current();
-	if(currentMenu == MENU_MANUAL_SET_RUN_TIME) {
+	if(currentMenu == MENU_MANUAL_SET_RUN_TIME || currentMenu == MENU_SET_MOTOR_SPEED) {
+		updatingMotorStatus = false;
 		menu_use(MENU_ROOT);
 		menu_down();
 		// Move to auto timer mode if timer is running
@@ -155,7 +324,7 @@ void start_stop_all_pressed() {
 		WIRELESS_MODULE_3,
 		WIRELESS_MODULE_4,
 		WIRELESS_MODULE_5,
-		WIRELESS_MODULE_6 
+		WIRELESS_MODULE_6
 	};
 
 	wirelessMessage msg;
@@ -170,7 +339,7 @@ void start_stop_all_pressed() {
 			msg.type = MESSAGE_STOP;
 			timer_stop();
 			timer_set_state(false);
-			validCommand = true;	
+			validCommand = true;
 		} else {
 			display_show_message("STARTING", "ALL MOTORS", 1500);
 			msg.type = MESSAGE_START;
@@ -178,7 +347,7 @@ void start_stop_all_pressed() {
 			timer_set_state(true);
 			validCommand = true;
 		}
-		
+
 	} else if(displayMenu == MENU_TIMER) {
 
 		if(timer_is_running()) {
@@ -195,10 +364,9 @@ void start_stop_all_pressed() {
 			validCommand = true;
 		}
 	}
-	
+
 	if(validCommand) wireless_send_message(all_addresses, 6, msg);
 }
-
 
 void keyReleased(char key) {
 	wirelessMessage msg;
@@ -257,14 +425,22 @@ void keyReleased(char key) {
 }
 
 void start_program_timer() {
-	menu_left();
-	menu_select();
-	startSettingTimeValue(timer_get_run_time(), "MOTOR RUN TIME");
+	if(menu_get_current() == MENU_ROOT) {
+		menu_left();
+		menu_select();
+		startSettingTimeValue(timer_get_run_time(), "MOTOR RUN TIME");
+	}
 }
 
 void start_program_motor(int motorNo) {
-	Serial.print("Programming motor");
-	Serial.println(motorNo);
+	if(menu_get_current() == MENU_ROOT) {
+		menu_right();
+		menu_select();
+		selectedMotorNumber = motorNo;
+		wirelessMessage msg;
+		msg.type = MESSAGE_GET_PARAMS;
+		wireless_send_message(motorNo, msg);
+	}
 }
 
 void keypadListener(Key *keys, int keysLen) {
@@ -273,6 +449,10 @@ void keypadListener(Key *keys, int keysLen) {
 		Key key = keys[0];
 		if(key.kstate == RELEASED) {
 			keyReleased(key.kchar);
+		}
+		// OK pressed for 5 seconds
+		if(key.kstate == HOLD && key.kchar == 'D') {
+			start_program_timer();
 		}
 	} else if(keysLen == 2) {
 		bool okHold = false;
@@ -286,10 +466,6 @@ void keypadListener(Key *keys, int keysLen) {
 		for(int i = 0; i<keysLen; i++) {
 			if(keys[i].kstate == HOLD) {
 				switch(keys[i].kchar) {
-					case 'A':
-						start_program_timer();
-					break;
-
 					case '1':
 					case '2':
 					case '3':
@@ -324,6 +500,11 @@ void _loop() {
 	_timer_loop(milliseconds);
 	_menu_loop(milliseconds);
 	_display_loop(milliseconds);
+	if(updatingMotorStatus && milliseconds - lastUpdateStatusTime >= UPDATE_MOTOR_STATUS_MS) {
+		wirelessMessage msg;
+		msg.type = MESSAGE_MOTOR_STATUS;
+		wireless_send_message(selectedMotorNumber, msg);
+	}
 }
 
 #endif //MOTOR_REMOTE_CONTROLLER

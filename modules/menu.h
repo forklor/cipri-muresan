@@ -15,6 +15,7 @@
 #define MENU_SET_MOTOR_DECELERATION '7'
 #define MENU_SET_MOTOR_CS '8'
 #define MENU_SET_MOTOR_CHANGE_TIME '9'
+#define MENU_GET_MOTOR_STATUS 'A'
 
 
 void menu_up();

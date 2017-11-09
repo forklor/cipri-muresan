@@ -37,6 +37,13 @@ MenuItem mainManual = MenuItem("Manual", MENU_MANUAL);
 MenuItem manualRunTime = MenuItem("Set Run Time", MENU_MANUAL_SET_RUN_TIME);
 MenuItem manualStopTime = MenuItem("Set Stop Time", MENU_MANUAL_SET_STOP_TIME);
 
+MenuItem setMotorSpeed = MenuItem("Set Motor speed", MENU_SET_MOTOR_SPEED);
+MenuItem setMotorAccelertion = MenuItem("Set Motor acc", MENU_SET_MOTOR_ACCELERATION);
+MenuItem setMotorDeceleration = MenuItem("Set Motor deecc", MENU_SET_MOTOR_DECELERATION);
+MenuItem setMotorCs = MenuItem("Set Motor cs", MENU_SET_MOTOR_CS);
+MenuItem setMotorTime = MenuItem("Set Motor time", MENU_SET_MOTOR_CHANGE_TIME);
+MenuItem getMotorStatus = MenuItem("Get Motor Status", MENU_GET_MOTOR_STATUS);
+
 void updateDisplay() {
 
 	if(menu.getCurrent().getShortkey() == MENU_TIMER || menu.getCurrent().getShortkey() == MENU_MANUAL) {
@@ -107,6 +114,16 @@ void _menu_setup() {
 	mainTimer.addLeft(manualRunTime);
 	manualRunTime.addAfter(manualStopTime);
 	manualStopTime.addAfter(manualRunTime);
+
+	mainManual.addRight(setMotorSpeed);
+	mainTimer.addRight(setMotorSpeed);
+
+	setMotorSpeed.addAfter(setMotorAccelertion);
+	setMotorAccelertion.addAfter(setMotorDeceleration);
+	setMotorDeceleration.addAfter(setMotorCs);
+	setMotorCs.addAfter(setMotorTime);
+	setMotorTime.addAfter(getMotorStatus);
+	getMotorStatus.addAfter(setMotorSpeed);
 
 	menu.moveDown();
 }
