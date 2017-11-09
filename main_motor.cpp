@@ -7,7 +7,7 @@
 #include "modules/motor.h"
 #include "modules/wireless.h"
 
-void m_wirelessMessageReceived(wirelessMessage message) {
+wirelessMessage m_wirelessMessageReceived(wirelessMessage message) {
 	Serial.print("received message ");
 	Serial.print(message.type);
 	Serial.print("\n");
@@ -19,6 +19,9 @@ void m_wirelessMessageReceived(wirelessMessage message) {
 		case MESSAGE_SET_PARAMS:
 			motor_set_parameters(message.parameters);
 			break;
+		case MESSAGE_GET_PARAMS:
+			message.parameters = motor_get_parameters();
+			break;
 		case MESSAGE_CHANGE_DIRECTION: 
 			motor_switch_direction();
 			break;
@@ -28,9 +31,14 @@ void m_wirelessMessageReceived(wirelessMessage message) {
 		case MESSAGE_STOP:
 			motor_stop();
 			break;
+		case MESSAGE_MOTOR_STATUS:
+			message.status = motor_get_status();
+			break;
 		default:
 			Serial.println("Unknown message type");
 	}
+
+	return message;
 }
 
 void _setup() {
@@ -45,7 +53,8 @@ void _setup() {
 		100,
 		5,
 		2,
-		15
+		15,
+		20000
 	});
 }
 

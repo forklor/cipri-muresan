@@ -10,7 +10,8 @@ byte wireless_addresses[][6] = {"1Node", "2Node", "3Node", "4Node", "5Node", "6N
 
 RF24 *radio;
 
-void (*_w_listener)(wirelessMessage);
+void (*_w_ack_listener)(wirelessMessage);
+wirelessMessage (*_w_listener)(wirelessMessage);
 
 bool listening;
 int localAddress;
@@ -69,8 +70,8 @@ void _wireless_loop(long milliseconds) {
 				radio->read(&message, sizeof(message));
 			}
 			radio->stopListening();
-			radio->write(&message, sizeof(message));
-			_w_listener(message);
+			wirelessMessage ack = _w_listener(message);
+			radio->write(&ack, sizeof(ack));
 			radio->startListening();
 		}
 
@@ -92,6 +93,9 @@ void _wireless_loop(long milliseconds) {
 			while(radio->available()) {
 				radio->read(&ackMessage, sizeof(ackMessage));
 				Serial.print("Got ack");
+				if(_w_ack_listener != NULL) {
+					_w_ack_listener(ackMessage);
+				}
 				radio->stopListening();
 				waitingForAck = false;
 				checkIfMultipleMessages();
@@ -142,8 +146,15 @@ void wireless_send_message(int *targets, int targets_len, wirelessMessage msg) {
 	wireless_send_message(targetAddresses[targetAddressIndex], msg);
 }
 
-void wireless_listen(int targetAddress, void (*f)(wirelessMessage)) {
-		
+
+void wireless_listen_ack(void (*f)(wirelessMessage)) {
+	_w_ack_listener = f;
+}
+
+void wireless_listen(int targetAddress, wirelessMessage (*f)(wirelessMessage)) {
+	
+	_w_listener = f;
+	
 	Serial.print("Start listening Writing to ");
 	Serial.print(targetAddress);
 	Serial.print(" Reading from ");
@@ -151,11 +162,10 @@ void wireless_listen(int targetAddress, void (*f)(wirelessMessage)) {
 	Serial.print("\n");
 
 	listening = true;
-	_w_listener = f;
+
 
 	radio->openWritingPipe(wireless_addresses[targetAddress]); // remtote control
 	radio->openReadingPipe(1, wireless_addresses[localAddress]);  // module_x
 	
 	radio->startListening();
 }
-

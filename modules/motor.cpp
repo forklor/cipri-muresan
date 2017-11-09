@@ -36,6 +36,7 @@ int _targetDirection;
 
 long _lastLoopMillis;
 long _directionChangeStopMillis;
+long _directionChangeMillis;
 
 bool _running;
 
@@ -102,6 +103,7 @@ void motor_start() {
 	if(_targetDirection == BRAKE) {
 		_targetDirection = _currentDirection = CW;
 	}
+	_directionChangeMillis = millis();
 }
 
 void motor_stop() {
@@ -119,6 +121,7 @@ void motor_stop_brake() {
 void motor_toggle_start_stop() {
 	_targetSpeed = _targetSpeed > 0 ? 0 : settings.maxSpeed;
 	_targetDirection = _currentDirection;
+	if(_targetSpeed > 0) _directionChangeMillis = millis();
 	if(_targetSpeed == 0) {
 		_targetDirection = _currentDirection = BRAKE;
 	} else if(_currentDirection == BRAKE) {
@@ -135,6 +138,22 @@ void motor_set_parameters(motorParameters params) {
 	if(_running) _targetSpeed = settings.maxSpeed;
 }
 
+motorParameters motor_get_parameters() {
+	return settings;
+}
+
+motorStatus motor_get_status() {
+	motorStatus status = {
+		_currentSpeed,
+		_currentDirection,
+		analogRead(CURRENT_SEN_1),
+		analogRead(CURRENT_SEN_2)
+	};
+
+	return status;
+}
+
+
 void _motor_loop(long milliseconds) {
 
 	if(milliseconds - _lastLoopMillis < SPEED_CHANGE_STEP_MS) return;
@@ -146,6 +165,9 @@ void _motor_loop(long milliseconds) {
 			int diff = _targetSpeed > _currentSpeed ? settings.acceleration : -(settings.acceleration * settings.decelerationProportion);
 			_currentSpeed += diff;
 			changed = true;
+		} else if(_targetSpeed > 0 && milliseconds - _directionChangeMillis >= settings.changeDirTime) {
+			Serial.println("Changing direction, time passed");
+			motor_switch_direction();
 		}
 	} else {
 
@@ -159,6 +181,7 @@ void _motor_loop(long milliseconds) {
 				_directionChangeStopMillis = 0;
 				_currentDirection = _targetDirection;
 				changed = true;
+				_directionChangeMillis = milliseconds;
 			}
 		} else {
 			_currentDirection = BRAKE;

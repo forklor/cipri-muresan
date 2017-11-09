@@ -10,6 +10,12 @@
 #define MENU_MANUAL_SET_RUN_TIME '3'
 #define MENU_MANUAL_SET_STOP_TIME '4'
 
+#define MENU_SET_MOTOR_SPEED '5'
+#define MENU_SET_MOTOR_ACCELERATION '6'
+#define MENU_SET_MOTOR_DECELERATION '7'
+#define MENU_SET_MOTOR_CS '8'
+#define MENU_SET_MOTOR_CHANGE_TIME '9'
+
 
 void menu_up();
 void menu_down();

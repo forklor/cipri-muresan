@@ -50,6 +50,34 @@ void startSettingTimeValue(long value, char *displayName) {
 	display_lcd.print(displayName);
 }
 
+void rc_wirelessMessageAckReceived(wirelessMessage message) {
+	Serial.print("received ack message ");
+	Serial.println(message.type);
+	if(message.type == MESSAGE_GET_PARAMS) {
+		Serial.print("s: ");
+		Serial.print(message.parameters.maxSpeed);
+		Serial.print(" a: ");
+		Serial.print(message.parameters.acceleration);
+		Serial.print(" d: ");
+		Serial.print(message.parameters.decelerationProportion);
+		Serial.print(" cs: ");
+		Serial.print(message.parameters.csThreshold);
+		Serial.print(" t: ");
+		Serial.println(message.parameters.changeDirTime);
+
+	}
+	if(message.type == MESSAGE_MOTOR_STATUS) {
+		Serial.print("s: ");
+		Serial.print(message.status.speed);
+		Serial.print(" d: ");
+		Serial.print(message.status.direction);
+		Serial.print(" cs1: ");
+		Serial.print(message.status.cs1);
+		Serial.print(" cs2: ");
+		Serial.println(message.status.cs2);
+	}
+}
+
 void ok_pressed() {
 
 	char currentMenu = menu_get_current();
@@ -115,7 +143,7 @@ void start_stop_all_pressed() {
 		menu_down();
 		// Move to auto timer mode if timer is running
 		if(!timer_is_paused()) {
-			menu_down()
+			menu_down();
 		}
 
 		return;
@@ -190,13 +218,14 @@ void keyReleased(char key) {
 			}
 		case '7':
 			if(currentMenu == MENU_ROOT) {
-				msg.type = MESSAGE_SET_PARAMS;
-				msg.parameters = {
-					50,
-					5,
-					3,
-					15
-				};
+
+				msg.type = MESSAGE_MOTOR_STATUS;
+				// msg.parameters = {
+				// 	50,
+				// 	5,
+				// 	3,
+				// 	15
+				// };
 				wireless_send_message(WIRELESS_MODULE_1, msg);
 				break;
 			}
@@ -281,6 +310,7 @@ void _setup() {
 	Serial.begin(9600);
 	Serial.println("Remote control program running");
 	_wireless_setup(A0, A1, WIRELESS_REMOTE);
+	wireless_listen_ack(rc_wirelessMessageAckReceived);
 	_keypad_setup(keypadListener);
 	_display_setup();
 	_menu_setup();

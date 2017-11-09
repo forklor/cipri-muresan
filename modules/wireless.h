@@ -14,7 +14,8 @@
 void _wireless_setup(int pinA, int pinB, int localAddress);
 void _wireless_loop(long milliseconds);
 
-void wireless_listen(int targetAddress, void (*f)(wirelessMessage));
+void wireless_listen_ack(void (*f)(wirelessMessage));
+void wireless_listen(int targetAddress, wirelessMessage (*f)(wirelessMessage));
 void wireless_send_message(int targetAddress, wirelessMessage msg);
 void wireless_send_message(int *targetAddresses,  int addresses_len, wirelessMessage msg);
 
