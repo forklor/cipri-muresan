@@ -49,11 +49,11 @@ void checkIfMultipleMessages() {
 	targetAddressIndex += 1;
 	
 	if(targetAddressIndex < targetAddressesLen) {
-		Serial.print("send message to index ");
+		Serial.print(F("send message to index "));
 		Serial.println(targetAddressIndex);
 		wireless_send_message(targetAddresses[targetAddressIndex], messageToSend);
 	} else {
-		Serial.println("finished sending message to multiple targets");
+		Serial.println(F("finished sending message to multiple targets"));
 		targetAddressIndex = -1;
 		sendMesssageMultiple = false;
 	}
@@ -84,7 +84,7 @@ void _wireless_loop(long milliseconds) {
 		}
 
 		if (timeout) {
-			Serial.println("Failed, response timed out.");
+			Serial.println(F("Failed, response timed out."));
 			radio->stopListening();
 			waitingForAck = false;
 			checkIfMultipleMessages();
@@ -92,7 +92,7 @@ void _wireless_loop(long milliseconds) {
 			wirelessMessage ackMessage;
 			while(radio->available()) {
 				radio->read(&ackMessage, sizeof(ackMessage));
-				Serial.print("Got ack");
+
 				if(_w_ack_listener != NULL) {
 					_w_ack_listener(ackMessage);
 				}
@@ -106,7 +106,7 @@ void _wireless_loop(long milliseconds) {
 		radio->stopListening();
 
 		if (!radio->write(&messageToSend, sizeof(messageToSend))) {
-			Serial.println("Failed writing");
+			Serial.println(F("Failed writing"));
 			sendMessage = false;
 			checkIfMultipleMessages();
 		} else {
@@ -120,9 +120,9 @@ void _wireless_loop(long milliseconds) {
 
 void wireless_send_message(int targetAddress, wirelessMessage msg) {
 
-	Serial.print("send message from ");
+	Serial.print(F("send message from "));
 	Serial.print(localAddress);
-	Serial.print(" to ");
+	Serial.print(F(" to "));
 	Serial.println(targetAddress);
 
 	radio->openWritingPipe(wireless_addresses[targetAddress]); // module_x
@@ -136,7 +136,7 @@ void wireless_send_message(int targetAddress, wirelessMessage msg) {
 
 void wireless_send_message(int *targets, int targets_len, wirelessMessage msg) {
 
-	targetAddresses = malloc(targets_len * sizeof(*targetAddresses));
+	targetAddresses = (int *)malloc(targets_len * sizeof(*targetAddresses));
 	memcpy(targetAddresses, targets, targets_len * sizeof(*targetAddresses));
 
 	sendMesssageMultiple = true;
@@ -155,14 +155,13 @@ void wireless_listen(int targetAddress, wirelessMessage (*f)(wirelessMessage)) {
 	
 	_w_listener = f;
 	
-	Serial.print("Start listening Writing to ");
+	Serial.print(F("Start listening Writing to "));
 	Serial.print(targetAddress);
-	Serial.print(" Reading from ");
+	Serial.print(F(" Reading from "));
 	Serial.print(localAddress);
 	Serial.print("\n");
 
 	listening = true;
-
 
 	radio->openWritingPipe(wireless_addresses[targetAddress]); // remtote control
 	radio->openReadingPipe(1, wireless_addresses[localAddress]);  // module_x

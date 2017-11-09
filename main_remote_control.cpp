@@ -122,7 +122,7 @@ void updateInputMotorParameters() {
 				break;
 
 			case MENU_SET_MOTOR_DECELERATION:
-				startSettingDecimalValue(settingParameters.decelerationProportion, "DECELERATION MOTOR ");
+				startSettingDecimalValue(settingParameters.decelerationPercentage, "DECELERATION MOTOR ");
 				break;
 
 			case MENU_SET_MOTOR_CS:
@@ -150,7 +150,7 @@ void rc_wirelessMessageAckReceived(wirelessMessage message) {
 		Serial.print(" a: ");
 		Serial.print(message.parameters.acceleration);
 		Serial.print(" d: ");
-		Serial.print(message.parameters.decelerationProportion);
+		Serial.print(message.parameters.decelerationPercentage);
 		Serial.print(" cs: ");
 		Serial.print(message.parameters.csThreshold);
 		Serial.print(" t: ");
@@ -214,7 +214,7 @@ void ok_pressed() {
 				settingParameters.acceleration = decimalVal;
 				break;
 			case MENU_SET_MOTOR_DECELERATION:
-				settingParameters.decelerationProportion = decimalVal;
+				settingParameters.decelerationPercentage = decimalVal;
 				break;
 			case MENU_SET_MOTOR_CS:
 				settingParameters.csThreshold = decimalVal;
@@ -388,12 +388,6 @@ void keyReleased(char key) {
 			if(currentMenu == MENU_ROOT) {
 
 				msg.type = MESSAGE_MOTOR_STATUS;
-				// msg.parameters = {
-				// 	50,
-				// 	5,
-				// 	3,
-				// 	15
-				// };
 				wireless_send_message(WIRELESS_MODULE_1, msg);
 				break;
 			}
@@ -402,22 +396,12 @@ void keyReleased(char key) {
 			break;
 		case 'B':
 			up_pressed();
-			// Serial.println("Sending change direction message");
-			// msg.type = MESSAGE_CHANGE_DIRECTION;
-			// wireless_send_message(WIRELESS_MODULE_1, msg);
 			break;
 		case 'C':
 			down_pressed();
-			// Serial.println("Sending stop message");
-			// msg.type = MESSAGE_STOP;
-			// wireless_send_message(WIRELESS_MODULE_1, msg);
 			break;
 		case 'D':
 			ok_pressed();
-			// Serial.println("Sending start message");
-			// msg.type = MESSAGE_START;
-			// wireless_send_message(WIRELESS_MODULE_1, msg);
-			// break;
 		default:
 			//do nothing
 			break;

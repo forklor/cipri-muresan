@@ -24,15 +24,17 @@
 
 #define MOTOR_1 0
 
+#define INTERRUPT_PIN 2
+
 #define SPEED_CHANGE_STEP_MS 50 // how often to update motor speed
 #define DIRECTION_CHANGE_STOP_TIME_MS 1400 // how much to wait after speed gets to 0 before changing direction
 
 motorParameters settings;
 
 int _currentSpeed;
-int _currentDirection;
+volatile int _currentDirection;
 int _targetSpeed;
-int _targetDirection;
+volatile int _targetDirection;
 
 long _lastLoopMillis;
 long _directionChangeStopMillis;
@@ -64,12 +66,18 @@ void motorGo( uint8_t direct, uint8_t pwm) {
 	//analogWrite(PWM_MOTOR_2, pwm);
 }
 
+void interrupt_listener() {
+	_targetDirection = _currentDirection == CW ? CCW : CW;
+}
+
 void _motor_setup() {
 
 	pinMode(MOTOR_A1_PIN, OUTPUT);
 	pinMode(MOTOR_B1_PIN, OUTPUT);
 
 	pinMode(PWM_MOTOR_1, OUTPUT);
+
+	pinMode(INTERRUPT_PIN, INPUT_PULLUP);
 
 	//pinMode(MOTOR_A2_PIN, OUTPUT);
 	//pinMode(MOTOR_B2_PIN, OUTPUT);
@@ -84,14 +92,13 @@ void _motor_setup() {
 	digitalWrite(EN_PIN_1, HIGH);
 	digitalWrite(EN_PIN_2, HIGH);
 
-	// Initiates the serial to do the monitoring
-	Serial.println("Begin motor control");
-
 	_lastLoopMillis = millis();
 
 	_running = false;
 	_currentSpeed = _targetSpeed = 0;
 	_currentDirection = _targetDirection = CW;
+
+	attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN), interrupt_listener, CHANGE);
 }
 
 void motor_start() {
@@ -153,7 +160,6 @@ motorStatus motor_get_status() {
 	return status;
 }
 
-
 void _motor_loop(long milliseconds) {
 
 	if(milliseconds - _lastLoopMillis < SPEED_CHANGE_STEP_MS) return;
@@ -162,11 +168,11 @@ void _motor_loop(long milliseconds) {
 	bool changed = false;
 	if(_currentDirection == _targetDirection) {
 		if(_currentSpeed != _targetSpeed) {
-			int diff = _targetSpeed > _currentSpeed ? settings.acceleration : -(settings.acceleration * settings.decelerationProportion);
+			int diff = _targetSpeed > _currentSpeed ? settings.acceleration : -(settings.acceleration * (1 / (settings.decelerationPercentage / 100)));
 			_currentSpeed += diff;
 			changed = true;
 		} else if(_targetSpeed > 0 && milliseconds - _directionChangeMillis >= settings.changeDirTime) {
-			Serial.println("Changing direction, time passed");
+			Serial.println(F("Changing direction, time passed"));
 			motor_switch_direction();
 		}
 	} else {
@@ -185,7 +191,7 @@ void _motor_loop(long milliseconds) {
 			}
 		} else {
 			_currentDirection = BRAKE;
-			_currentSpeed -= (settings.acceleration * settings.decelerationProportion);
+			_currentSpeed -= (settings.acceleration * settings.decelerationPercentage);
 			changed = true;
 		}
 	}
@@ -194,9 +200,9 @@ void _motor_loop(long milliseconds) {
 
 	if(changed) {
 		Serial.print(_currentDirection);
-		Serial.print("->");
-		Serial.print(_currentSpeed);
-		Serial.print("\n");
+		Serial.print(F("->"));
+		Serial.println(_currentSpeed);
+
 		motorGo(_currentDirection, _currentSpeed);
 	}
 
@@ -211,7 +217,7 @@ void _motor_loop(long milliseconds) {
 	// Serial.print("\n");
 
 
-	if (analogRead(CURRENT_SEN_1) < CS_THRESHOLD) {
+	if (_currentSpeed == _targetSpeed && _currentSpeed > 0 && analogRead(CURRENT_SEN_1) < CS_THRESHOLD) {
 		//Serial.println("CS_THRESHOLD reached");
 	}
 }

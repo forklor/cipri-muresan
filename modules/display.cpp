@@ -9,7 +9,7 @@
 #define D6_pin  6
 #define D7_pin  7
 
-LiquidCrystal_I2C	display_lcd(I2C_ADDR,En_pin,Rw_pin,Rs_pin,D4_pin,D5_pin,D6_pin,D7_pin);
+LiquidCrystal_I2C	display_lcd(I2C_ADDR, En_pin, Rw_pin, Rs_pin, D4_pin, D5_pin, D6_pin, D7_pin);
 
 bool hasMessage;
 long messageStartTime;

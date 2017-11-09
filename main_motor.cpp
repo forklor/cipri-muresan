@@ -8,9 +8,8 @@
 #include "modules/wireless.h"
 
 wirelessMessage m_wirelessMessageReceived(wirelessMessage message) {
-	Serial.print("received message ");
-	Serial.print(message.type);
-	Serial.print("\n");
+	Serial.print(F("received message "));
+	Serial.println(message.type);
 
 	switch (message.type) {
 		case MESSAGE_TOGGLE_START_STOP:
@@ -35,7 +34,7 @@ wirelessMessage m_wirelessMessageReceived(wirelessMessage message) {
 			message.status = motor_get_status();
 			break;
 		default:
-			Serial.println("Unknown message type");
+			Serial.println(F("Unknown message type"));
 	}
 
 	return message;
@@ -44,17 +43,17 @@ wirelessMessage m_wirelessMessageReceived(wirelessMessage message) {
 void _setup() {
 
 	Serial.begin(9600);
-	Serial.println("Motor program running");
+	Serial.println(F("Motor program running"));
 	_wireless_setup(9, 10, MOTOR_MODULE_NUMBER);
 	wireless_listen(WIRELESS_REMOTE, m_wirelessMessageReceived);
 
 	_motor_setup();
 	motor_set_parameters({
-		100,
-		5,
-		2,
-		15,
-		20000
+		100, 			// Speed
+		20, 			// Accelereration step
+		50, 			// Decceleration percentage
+		15, 			// CS Threshold
+		20000  			// Change dir time
 	});
 }
 
@@ -84,9 +83,8 @@ void _loop() {
 				motor_switch_direction();
 				break;
 			default:
-				Serial.print("Unknown command ");
-				Serial.print(receivedChar);
-				Serial.print("\n");
+				Serial.print(F("Unknown command "));
+				Serial.println(receivedChar);
 		}
 	}
 }

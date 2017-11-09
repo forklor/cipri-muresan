@@ -4,7 +4,7 @@
 struct motorParameters {
 	int maxSpeed;
 	int acceleration;
-	double decelerationProportion;
+	double decelerationPercentage;
 	int csThreshold;
 	long changeDirTime;
 };
