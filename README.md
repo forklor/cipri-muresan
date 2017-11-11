@@ -1,43 +1,18 @@
 # cipri-muresan
 Arduino controller for Cipri Mureșan sculpture
 
-## Motor controller
-The motor controller will set motor speed and direction based on input from remote controller messages and values from motor CS pin and contact sensor. It starts by driving the motor forward until one of the following events happen:
+# Setup 
 
-- receives a stop / change direction message from the remote control and acts accordingly
-- the contact sensor is triggered, the motor stops and starts going in the oposite direction
-- the motor gets stuck or has a hard time going forward, the motor stops and starts going in the oposite direction
+Have the follwoing libraries intalled in your library folder:
+    - [RF24](https://github.com/nRF24/RF24) - wireless controller library
+    - [LCD Library](https://bitbucket.org/fmalpartida/new-liquidcrystal) - library for LCD module (using `LiquidCrystal_I2C`)
+    - [Menu Backend](https://github.com/Orange-Cat/MenuBackend) - library for building menus and handle navigation
+    - [Keypad](https://github.com/Chris--A/Keypad) - library for handling keypad events
 
-Change of speed (stopping, starting) will be made using a linear acceleration / deceleration based on configured parameters.
+# Running
 
-### Configurable parameters
-* **MAX_SPEED** - the top speed value for the motor (value from 0-255)
-* **ACCELERATION** - when starting from speed 0, increase speed with this value on an interval until reaching MAX_SPEED (value from 0-255)
-* **DECELERATION_FACTOR** - defines how fast to slow down compared to **ACCELERATION** value, (e.g. for value 2, deceleratio will be at double the rate of acceleration)
-* **CURRENT_SENSING_TRESHOLD** - value for current sensing pin at which to stop and reverse direction (to fix cases where the motor gets stuck)
+The entry file is `main.ino`. To configure if you want to build the motor or the remote control version of the code and to specify which motor is the build target, you need to change `config.h`. Comment or uncomment and change the values for the definitions as described below
 
-### Wireless communication
-The controller accepts messages from wireless receiver and acts accordingly. Start/Stop/Change Direction actions will be made following **ACCELERATION** and **DECELERATION_FACTOR** parameters.
-
-#### Receive messages
-* **SET_PARAMS** - sets the values for the configurable parameters as described above, so that next `loop` cycle will use new value
-   * payload: 
-* **TOGGLE_START_STOP** - toggles current state of motor
-* **CHANGE_DIRECTION** - stop and start in oposite direction
-* **START** - starts the motor if stopped. If already running, ignore
-* **STOP** - stops the motor if running. If not running ignore
-
-#### Send messages
-* **ACK** - acknowledges messages.
-   * payload: 
-* **MOTOR_STATUS** - sends current motor status
-   * payload: 
-
-### Contact interrupt pin
-Controller should read value for INT0/INT1 interrupt pin and change direction when value is changed. Do this by using `attachInterrupt`.
-
- ## Remote control controller
-*TBD*
- Controller that sends messages to the motor controller array. Handles global start / stop time, sets configuration for each motor and sends individual motor commands.
-
-
+- `REMOTE_CONTROL_CONTROLLER` - value `1` or `true` if the build target is the remote control arduino module
+- `MOTOR_CONTROLLER` - value `1` or `true` if the build target is a motor arduino module
+- `MOTOR_MODULE_NUMBER` - value from `1` to `6` that defines for which motor the build is made. Each motor uses a different address to comunicate with the remote control module
