@@ -2,7 +2,10 @@
 
 #ifdef REMOTE_CONTROL_CONTROLLER
 
+#define MEMORY_CHECK_VALUE 33
+
 #include <Arduino.h>
+#include <EEPROM.h>
 
 #include "modules/wireless.h"
 #include "modules/keypad.h"
@@ -11,6 +14,11 @@
 #include "modules/timer.h"
 
 #define UPDATE_MOTOR_STATUS_MS 800
+
+struct timerParameters {
+	long runTime;
+	long stopTime;
+};
 
 void timerStateChanged(bool running) {
 	int all_addresses[6] = {
@@ -111,6 +119,16 @@ void startSettingDecimalValue(long value, char *displayName) {
 	display_lcd.print(displayName);
 }
 
+void saveTimerParameters(long runTime, long stopTime) {
+	int check_memory = MEMORY_CHECK_VALUE;
+	timerParameters savedTimerParams = {
+		runTime, // run time
+		stopTime // stop time
+	};
+	EEPROM.put(0, check_memory);
+	EEPROM.put(sizeof(int), savedTimerParams);
+}
+
 void updateInputMotorParameters() {
 
 	if(menu_get_current() == MENU_SET_MOTOR_SPEED) {
@@ -202,11 +220,17 @@ void ok_pressed() {
 	} else if(currentMenu == MENU_MANUAL_SET_RUN_TIME) {
 		char displayMenu = menu_get_display();
 		if(displayMenu == MENU_MANUAL_SET_RUN_TIME) {
-			timer_set_run_time(timerValue);
+			if(timerValue != timer_get_run_time()) {
+				timer_set_run_time(timerValue);
+				saveTimerParameters(timer_get_run_time(), timer_get_stop_time());
+			}
 			menu_down();
 			startSettingTimeValue(timer_get_stop_time(), "MOTOR STOP TIME");
 		} else {
-			timer_set_stop_time(timerValue);
+			if(timerValue != timer_get_stop_time()) {
+				timer_set_stop_time(timerValue);
+				saveTimerParameters(timer_get_run_time(), timer_get_stop_time());
+			}
 			menu_down();
 			startSettingTimeValue(timer_get_run_time(), "MOTOR RUN TIME");
 		}
@@ -216,18 +240,23 @@ void ok_pressed() {
 		bool updateParams = true;
 		switch(displayMenu) {
 			case MENU_SET_MOTOR_SPEED:
+				if(decimalVal == settingParameters.maxSpeed) updateParams = false;
 				settingParameters.maxSpeed = decimalVal;
 				break;
 			case MENU_SET_MOTOR_ACCELERATION:
+				if(decimalVal == settingParameters.acceleration) updateParams = false;
 				settingParameters.acceleration = decimalVal;
 				break;
 			case MENU_SET_MOTOR_DECELERATION:
+				if(decimalVal == settingParameters.decelerationPercentage) updateParams = false;
 				settingParameters.decelerationPercentage = decimalVal;
 				break;
 			case MENU_SET_MOTOR_CS:
+				if(decimalVal == settingParameters.csThreshold) updateParams = false;
 				settingParameters.csThreshold = decimalVal;
 				break;
 			case MENU_SET_MOTOR_CHANGE_TIME:
+				if(decimalVal == settingParameters.changeDirTime) updateParams = false;
 				settingParameters.changeDirTime = timerValue;
 				break;
 			default:
@@ -339,9 +368,7 @@ void start_stop_all_pressed() {
 	bool validCommand = false;
 	char displayMenu = menu_get_display();
 
-
 	if(displayMenu == MENU_MANUAL) {
-
 		if(timer_is_running()) {
 			display_show_message("STOPPING", "ALL MOTORS", 1500);
 			msg.type = MESSAGE_STOP;
@@ -357,7 +384,6 @@ void start_stop_all_pressed() {
 		}
 
 	} else if(displayMenu == MENU_TIMER) {
-
 		if(timer_is_running()) {
 			display_show_message("STOPPING", "ALL MOTORS TIMER", 1500);
 			timer_set_state(false);
@@ -545,7 +571,21 @@ void _setup() {
 	_keypad_setup(keypadListener);
 	_display_setup();
 	_menu_setup();
+
+	timerParameters savedTimerParams;
+	int check_saved_memory;
+	EEPROM.get(0, check_saved_memory);
+	if(check_saved_memory == MEMORY_CHECK_VALUE) {
+		Serial.println(F("Found parameters saved in EEPROM"));
+		EEPROM.get(sizeof(int), savedTimerParams);
+	} else {
+		Serial.println(F("Didn't find parameters saved in EEPROM, initializing..."));
+		saveTimerParameters(30000L, 690000L);
+	}
+
 	_timer_setup(timerStateChanged);
+	timer_set_run_time(savedTimerParams.runTime);
+	timer_set_stop_time(savedTimerParams.stopTime);
 }
 
 void _loop() {
