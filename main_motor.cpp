@@ -2,13 +2,14 @@
 
 #ifdef MOTOR_CONTROLLER
 
-#define MEMORY_CHECK_VALUE 33
+#define MEMORY_CHECK_VALUE 34
 
 #include <Arduino.h>
 #include <EEPROM.h>
 
 #include "modules/motor.h"
 #include "modules/wireless.h"
+#include "modules/MemoryFree.h"
 
 wirelessMessage m_wirelessMessageReceived(wirelessMessage message) {
 	Serial.print(F("received message "));
@@ -82,6 +83,8 @@ void _setup() {
 	motor_set_parameters(savedParameters);
 }
 
+long displayFreeMemoryMs;
+
 void _loop() {
 	
 	unsigned long milliseconds = millis();
@@ -89,29 +92,35 @@ void _loop() {
 	_motor_loop(milliseconds);
 	_wireless_loop(milliseconds);
 
-	if (Serial.available() > 0) {
-		char receivedChar = Serial.read();
-		switch(receivedChar) {
-			case 's':
-				motor_toggle_start_stop();
-				break;
-			case 'x':
-				motor_stop();
-				break;
-			case 'c':
-				motor_stop_brake();
-				break;
-			case 'b':
-				motor_start();
-				break;
-			case 'd':
-				motor_switch_direction();
-				break;
-			default:
-				Serial.print(F("Unknown command "));
-				Serial.println(receivedChar);
-		}
-	}
+	// if(milliseconds - displayFreeMemoryMs >= 1000) {
+	// 	displayFreeMemoryMs = milliseconds;
+	// 	Serial.print("freeMemory()=");
+	// 	Serial.println(freeMemory());
+	// }
+
+	// if (Serial.available() > 0) {
+	// 	char receivedChar = Serial.read();
+	// 	switch(receivedChar) {
+	// 		case 's':
+	// 			motor_toggle_start_stop();
+	// 			break;
+	// 		case 'x':
+	// 			motor_stop();
+	// 			break;
+	// 		case 'c':
+	// 			motor_stop_brake();
+	// 			break;
+	// 		case 'b':
+	// 			motor_start();
+	// 			break;
+	// 		case 'd':
+	// 			motor_switch_direction();
+	// 			break;
+	// 		default:
+	// 			Serial.print(F("Unknown command "));
+	// 			Serial.println(receivedChar);
+	// 	}
+	// }
 }
 
 #endif //MOTOR_CONTROLLER
