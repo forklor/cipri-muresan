@@ -12,6 +12,7 @@
 #include "modules/display.h"
 #include "modules/menu.h"
 #include "modules/timer.h"
+#include "modules/MemoryFree.h"
 
 #define UPDATE_MOTOR_STATUS_MS 800
 
@@ -72,22 +73,27 @@ long timerValue;
 void setTimerValueUp() {
 	timerValue += 1000;
 	display_lcd.setCursor(0, 0);
-	display_lcd.print(timer_get_display_time(timerValue));
+	char *display_val = timer_get_display_time(timerValue);
+	display_lcd.print(display_val);
+	free(display_val);
 }
 
 void setTimerValueDown() {
 	if(timerValue > 0) timerValue -= 1000;
 	display_lcd.setCursor(0, 0);
-	display_lcd.print(timer_get_display_time(timerValue));
+	char *display_val = timer_get_display_time(timerValue);
+	display_lcd.print(display_val);
+	free(display_val);
 }
 
 void startSettingTimeValue(long value, char *displayName) {
-
 	timerValue = value;
 
 	display_lcd.clear();
 	display_lcd.setCursor(0, 0);
-	display_lcd.print(timer_get_display_time(timerValue));
+	char *display_val = timer_get_display_time(timerValue);
+	display_lcd.print(display_val);
+	free(display_val);
 	display_lcd.setCursor(0, 1);
 	display_lcd.print(displayName);
 }
@@ -165,7 +171,7 @@ void updateInputMotorParameters() {
 	}
 }
 
-void rc_wirelessMessageAckReceived(wirelessMessage message) {
+void rc_wirelessMessageAckReceived(wirelessMessage message, bool) {
 	Serial.print("received ack message ");
 	Serial.println(message.type);
 	if(message.type == MESSAGE_GET_PARAMS && menu_get_current() == MENU_SET_MOTOR_SPEED) {
@@ -410,76 +416,76 @@ void keyReleased(char key) {
 			if(currentMenu == MENU_ROOT) {
 				msg.type = MESSAGE_TOGGLE_START_STOP;
 				wireless_send_message(WIRELESS_MODULE_1, msg);
-				break;
 			}
+			break;
 		case '4':
 			if(currentMenu == MENU_ROOT) {
 				msg.type = MESSAGE_CHANGE_DIRECTION;
 				wireless_send_message(WIRELESS_MODULE_1, msg);
-				break;
 			}
+			break;
 		case '2':
 			if(currentMenu == MENU_ROOT) {
 				msg.type = MESSAGE_TOGGLE_START_STOP;
 				wireless_send_message(WIRELESS_MODULE_2, msg);
-				break;
 			}
+			break;
 		case '5':
 			if(currentMenu == MENU_ROOT) {
 				msg.type = MESSAGE_CHANGE_DIRECTION;
 				wireless_send_message(WIRELESS_MODULE_2, msg);
-				break;
 			}
+			break;
 		case '3':
 			if(currentMenu == MENU_ROOT) {
 				msg.type = MESSAGE_TOGGLE_START_STOP;
 				wireless_send_message(WIRELESS_MODULE_3, msg);
-				break;
 			}
+			break;
 		case '6':
 			if(currentMenu == MENU_ROOT) {
 				msg.type = MESSAGE_CHANGE_DIRECTION;
 				wireless_send_message(WIRELESS_MODULE_3, msg);
-				break;
 			}
+			break;
 		case '*':
 			if(currentMenu == MENU_ROOT) {
 				msg.type = MESSAGE_TOGGLE_START_STOP;
 				wireless_send_message(WIRELESS_MODULE_4, msg);
-				break;
 			}
+			break;
 		case '7':
 			if(currentMenu == MENU_ROOT) {
 
-				msg.type = MESSAGE_MOTOR_STATUS;
+				msg.type = MESSAGE_CHANGE_DIRECTION;
 				wireless_send_message(WIRELESS_MODULE_4, msg);
-				break;
 			}
+			break;
 		case '0':
 			if(currentMenu == MENU_ROOT) {
 				msg.type = MESSAGE_TOGGLE_START_STOP;
 				wireless_send_message(WIRELESS_MODULE_5, msg);
-				break;
 			}
+			break;
 		case '8':
 			if(currentMenu == MENU_ROOT) {
-				msg.type = MESSAGE_MOTOR_STATUS;
+				msg.type = MESSAGE_CHANGE_DIRECTION;
 				wireless_send_message(WIRELESS_MODULE_5, msg);
-				break;
 			}
+			break;
 		case '#':
 			if(currentMenu == MENU_ROOT) {
 				msg.type = MESSAGE_TOGGLE_START_STOP;
 				wireless_send_message(WIRELESS_MODULE_6, msg);
-				break;
 			}
+			break;
 		case '9':
 			if(currentMenu == MENU_ROOT) {
 
-				msg.type = MESSAGE_MOTOR_STATUS;
+				msg.type = MESSAGE_CHANGE_DIRECTION;
 				wireless_send_message(WIRELESS_MODULE_6, msg);
-				break;
 			}
+			break;
 		case 'A':
 			start_stop_all_pressed();
 			break;
@@ -491,6 +497,7 @@ void keyReleased(char key) {
 			break;
 		case 'D':
 			ok_pressed();
+			break;
 		default:
 			//do nothing
 			break;
@@ -513,6 +520,7 @@ void start_program_motor(int motorNo) {
 		wirelessMessage msg;
 		msg.type = MESSAGE_GET_PARAMS;
 		wireless_send_message(motorNo, msg);
+		updateInputMotorParameters();
 	}
 }
 
@@ -588,6 +596,8 @@ void _setup() {
 	timer_set_stop_time(savedTimerParams.stopTime);
 }
 
+long displayFreeMemoryMs;
+
 void _loop() {
 	long milliseconds = millis();
 	_wireless_loop(milliseconds);
@@ -595,10 +605,18 @@ void _loop() {
 	_timer_loop(milliseconds);
 	_menu_loop(milliseconds);
 	_display_loop(milliseconds);
+
 	if(updatingMotorStatus && milliseconds - lastUpdateStatusTime >= UPDATE_MOTOR_STATUS_MS) {
 		wirelessMessage msg;
 		msg.type = MESSAGE_MOTOR_STATUS;
 		wireless_send_message(selectedMotorNumber, msg);
+		lastUpdateStatusTime = milliseconds;
+	}
+
+	if(milliseconds - displayFreeMemoryMs >= 1000) {
+		displayFreeMemoryMs = milliseconds;
+		// Serial.print("freeMemory()=");
+		//Serial.println(freeMemory());
 	}
 }
 

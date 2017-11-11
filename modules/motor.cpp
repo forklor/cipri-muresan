@@ -227,6 +227,6 @@ void _motor_loop(long milliseconds) {
 
 
 	if (_currentSpeed == _targetSpeed && _currentSpeed > 0 && analogRead(CURRENT_SEN_1) < CS_THRESHOLD) {
-		//Serial.println("CS_THRESHOLD reached");
+		//motor_switch_direction();
 	}
 }

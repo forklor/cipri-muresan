@@ -3,7 +3,7 @@
 #include "display.h"
 #include "timer.h"
 
-#define UPDATE_DISPLAY_TIME_MS 500
+#define UPDATE_DISPLAY_TIME_MS 1000
 
 #include <MenuBackend.h>
 
@@ -52,23 +52,40 @@ void updateDisplay() {
 
 		if(!timer_is_paused()) {
 			if(timer_is_running()) {
-				display_lcd.print(timer_get_display_time(timer_get_current_time()));
+				char *display_val = timer_get_display_time(timer_get_current_time());
+				display_lcd.print(display_val);
+				free(display_val);
 				display_lcd.setCursor(8, 0);
-				display_lcd.print(timer_get_display_time(timer_get_stop_time()));
+				display_val = timer_get_display_time(timer_get_stop_time());
+				display_lcd.print(display_val);
+				free(display_val);
 			} else {
-				display_lcd.print(timer_get_display_time(timer_get_run_time()));
+				char *display_val = timer_get_display_time(timer_get_run_time());
+				display_lcd.print(display_val);
+				free(display_val);
 				display_lcd.setCursor(8, 0);
-				display_lcd.print(timer_get_display_time(timer_get_current_time()));
+				display_val = timer_get_display_time(timer_get_current_time());
+				display_lcd.print(display_val);
+				free(display_val);
 			}
 		} else {
-			display_lcd.print(timer_get_display_time(timer_get_run_time()));
+			char *display_val = timer_get_display_time(timer_get_run_time());
+			display_lcd.print(display_val);
+			free(display_val);
+
 			display_lcd.setCursor(8, 0);
-			display_lcd.print(timer_get_display_time(timer_get_stop_time()));
+			
+			display_val = timer_get_display_time(timer_get_stop_time());
+			display_lcd.print(display_val);
+			free(display_val);
 		}
 
 		display_lcd.setCursor(0, 1);
-		String state = timer_is_running() ? " ON" : " OFF";
-		display_lcd.print(menu.getCurrent().getName() + state);
+		char *displayMenuName = (char *)menu.getCurrent().getName();
+		char *display = (char *)malloc((strlen(displayMenuName) + 4) * sizeof(char));
+		sprintf(display, "%s %s", displayMenuName, timer_is_running() ? " ON " : " OFF");
+		display_lcd.print(display);
+		free(display);
 	}
 }
 

@@ -56,6 +56,7 @@ void checkIfMultipleMessages() {
 		Serial.println(F("finished sending message to multiple targets"));
 		targetAddressIndex = -1;
 		sendMesssageMultiple = false;
+		free(targetAddresses);
 	}
 }
 
@@ -155,11 +156,11 @@ void wireless_listen(int targetAddress, wirelessMessage (*f)(wirelessMessage)) {
 	
 	_w_listener = f;
 	
-	Serial.print(F("Start listening Writing to "));
-	Serial.print(targetAddress);
-	Serial.print(F(" Reading from "));
-	Serial.print(localAddress);
-	Serial.print("\n");
+	// Serial.print(F("Start listening Writing to "));
+	// Serial.print(targetAddress);
+	// Serial.print(F(" Reading from "));
+	// Serial.print(localAddress);
+	// Serial.print("\n");
 
 	listening = true;
 

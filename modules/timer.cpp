@@ -30,16 +30,12 @@ void timer_set_stop_time(long time) {
 	stopTime = time;
 }
 
-String timer_get_display_time(long time) {
+char *timer_get_display_time(long time) {
 	int allSecs = time / 1000;
 	int minutes = allSecs / 60;
 	int seconds = allSecs % 60;
-	String result = "";
-	String minutesprefix = "";
-	if(minutes < 10) minutesprefix = "0";
-	String secondsprefix = "";
-	if(seconds < 10) secondsprefix = "0";
-	result = result + minutesprefix + minutes + ':' + secondsprefix + seconds;
+	char *result = (char *)malloc(5 * sizeof(char));
+	sprintf(result, "%02d:%02d", minutes, seconds);
 	return result;
 }
 
@@ -90,7 +86,6 @@ void _timer_loop(long milliseconds) {
 	lastStepTime = milliseconds;
 	long maxTime = runningState ? runTime : stopTime;
 	currentTime = maxTime - (milliseconds - currentStateStartTime);
-	Serial.println(timer_get_display_time(currentTime));
 	if(currentTime <= 0) {
 		currentTime = 0;
 		_t_listener(!runningState);

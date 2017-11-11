@@ -10,7 +10,7 @@ long timer_get_stop_time();
 void timer_set_run_time(long time);
 void timer_set_stop_time(long time);
 
-String timer_get_display_time(long time);
+char *timer_get_display_time(long time);
 
 void timer_stop();
 void timer_start();
