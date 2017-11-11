@@ -2,7 +2,10 @@
 
 #ifdef MOTOR_CONTROLLER
 
+#define MEMORY_CHECK_VALUE 33
+
 #include <Arduino.h>
+#include <EEPROM.h>
 
 #include "modules/motor.h"
 #include "modules/wireless.h"
@@ -46,6 +49,12 @@ wirelessMessage m_wirelessMessageReceived(wirelessMessage message) {
 	return message;
 }
 
+void saveMotorParameters(motorParameters params) {
+	int check_memory = MEMORY_CHECK_VALUE;
+	EEPROM.put(0, check_memory);
+	EEPROM.put(sizeof(int), params);
+}
+
 void _setup() {
 
 	Serial.begin(9600);
@@ -53,14 +62,24 @@ void _setup() {
 	_wireless_setup(9, 10, MOTOR_MODULE_NUMBER);
 	wireless_listen(WIRELESS_REMOTE, m_wirelessMessageReceived);
 
+	int check_memory;
+	motorParameters savedParameters;
+	EEPROM.get(0, check_memory);
+	if(check_memory == MEMORY_CHECK_VALUE) {
+		Serial.println(F("Found parameters saved in EEPROM"));
+		EEPROM.get(sizeof(int), savedParameters);
+	} else {
+		Serial.println(F("Didn't find parameters saved in EEPROM, initializing..."));
+		saveMotorParameters({
+			100, 			// Speed
+			20, 			// Accelereration step
+			50, 			// Decceleration percentage
+			15, 			// CS Threshold
+			20000  			// Change dir time
+		});
+	}
 	_motor_setup();
-	motor_set_parameters({
-		100, 			// Speed
-		20, 			// Accelereration step
-		50, 			// Decceleration percentage
-		15, 			// CS Threshold
-		20000  			// Change dir time
-	});
+	motor_set_parameters(savedParameters);
 }
 
 void _loop() {
