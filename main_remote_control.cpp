@@ -79,12 +79,29 @@ void setTimerValueUp() {
 }
 
 void setTimerValueDown() {
-	if(timerValue > 0) timerValue -= 1000;
+	if(timerValue - 1000 > 0) timerValue -= 1000;
 	display_lcd.setCursor(0, 0);
 	char *display_val = timer_get_display_time(timerValue);
 	display_lcd.print(display_val);
 	free(display_val);
 }
+
+void setTimerValueUp(long diff) {
+	timerValue += diff;
+	display_lcd.setCursor(0, 0);
+	char *display_val = timer_get_display_time(timerValue);
+	display_lcd.print(display_val);
+	free(display_val);
+}
+
+void setTimerValueDown(long diff) {
+	if(timerValue - diff > 0) timerValue -= diff;
+	display_lcd.setCursor(0, 0);
+	char *display_val = timer_get_display_time(timerValue);
+	display_lcd.print(display_val);
+	free(display_val);
+}
+
 
 void startSettingTimeValue(long value, char *displayName) {
 	timerValue = value;
@@ -411,6 +428,7 @@ void start_stop_all_pressed() {
 void keyReleased(char key) {
 	wirelessMessage msg;
 	char currentMenu = menu_get_current();
+	char displayMenu = menu_get_display();
 	switch(key) {
 		case '1':
 			if(currentMenu == MENU_ROOT) {
@@ -419,6 +437,11 @@ void keyReleased(char key) {
 			}
 			break;
 		case '4':
+			if(displayMenu == MENU_SET_MOTOR_CHANGE_TIME || 
+				displayMenu == MENU_MANUAL_SET_RUN_TIME ||
+				displayMenu == MENU_MANUAL_SET_STOP_TIME) {
+				setTimerValueUp(60000);
+			}
 			if(currentMenu == MENU_ROOT) {
 				msg.type = MESSAGE_CHANGE_DIRECTION;
 				wireless_send_message(WIRELESS_MODULE_1, msg);
@@ -455,6 +478,11 @@ void keyReleased(char key) {
 			}
 			break;
 		case '7':
+			if(displayMenu == MENU_SET_MOTOR_CHANGE_TIME || 
+				displayMenu == MENU_MANUAL_SET_RUN_TIME ||
+				displayMenu == MENU_MANUAL_SET_STOP_TIME) {
+				setTimerValueDown(60000);
+			}
 			if(currentMenu == MENU_ROOT) {
 
 				msg.type = MESSAGE_CHANGE_DIRECTION;

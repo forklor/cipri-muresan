@@ -150,7 +150,6 @@ char menu_get_current() {
 }
 
 char menu_get_display() {
-	Serial.println(menu.getCurrent().getName());
 	return menu.getCurrent().getShortkey();
 }
 
