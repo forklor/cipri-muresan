@@ -4,6 +4,7 @@ Arduino controller for Cipri Mureșan sculpture
 # Setup 
 
 Have the follwoing libraries intalled in your library folder:
+
     - [RF24](https://github.com/nRF24/RF24) - wireless controller library
     - [LCD Library](https://bitbucket.org/fmalpartida/new-liquidcrystal) - library for LCD module (using `LiquidCrystal_I2C`)
     - [Menu Backend](https://github.com/Orange-Cat/MenuBackend) - library for building menus and handle navigation
