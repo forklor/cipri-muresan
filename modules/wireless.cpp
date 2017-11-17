@@ -4,7 +4,7 @@
 
 #include "wireless.h"
 
-#define ACK_TIMEOUT_MS 2000
+#define ACK_TIMEOUT_MS 200
 
 byte wireless_addresses[][6] = {"1Node", "2Node", "3Node", "4Node", "5Node", "6Node", "7Node"};
 
@@ -26,6 +26,8 @@ int *targetAddresses;
 int targetAddressesLen;
 int targetAddressIndex;
 bool sendMesssageMultiple;
+
+int __targetAddress = 0;
 
 void _wireless_setup(int pinA, int pinB, int address) {
 
@@ -52,8 +54,7 @@ void checkIfMultipleMessages() {
 	targetAddressIndex += 1;
 	
 	if(targetAddressIndex < targetAddressesLen) {
-		Serial.print(F("send message to index "));
-		Serial.println(targetAddressIndex);
+		//Serial.print(F("send message to index "));
 		wireless_send_message(targetAddresses[targetAddressIndex], messageToSend);
 	} else {
 		Serial.println(F("finished sending message to multiple targets"));
@@ -96,31 +97,32 @@ void _wireless_loop(long milliseconds) {
 			wirelessMessage ackMessage;
 			while(radio->available()) {
 				radio->read(&ackMessage, sizeof(ackMessage));
-
 				if(_w_ack_listener != NULL) {
 					_w_ack_listener(ackMessage);
 				}
 				radio->stopListening();
 				waitingForAck = false;
+			}
+			if(!waitingForAck) {
+				Serial.print("received ack");
+				Serial.println(__targetAddress);
 				checkIfMultipleMessages();
 			}
 		}
 	} else if(sendMessage) {
 
 		radio->stopListening();
-
 		if (!radio->write(&messageToSend, sizeof(messageToSend))) {
 			Serial.println(F("Failed writing"));
-			sendMessage = false;
-			checkIfMultipleMessages();
-		} else {
-			waitingForAck = true;
-			startWaitingForAckTime = millis();
-			radio->startListening();
-			sendMessage = false;
-		}
+		} 
+
+		waitingForAck = true;
+		startWaitingForAckTime = millis();
+		radio->startListening();
+		sendMessage = false;
 	}
 }
+
 
 void wireless_send_message(int targetAddress, wirelessMessage msg) {
 
@@ -128,6 +130,7 @@ void wireless_send_message(int targetAddress, wirelessMessage msg) {
 	Serial.print(localAddress);
 	Serial.print(F(" to "));
 	Serial.println(targetAddress);
+	__targetAddress = targetAddress;
 
 	radio->openWritingPipe(wireless_addresses[targetAddress]); // module_x
 	radio->openReadingPipe(1, wireless_addresses[localAddress]); // remote control

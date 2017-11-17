@@ -189,8 +189,7 @@ void updateInputMotorParameters() {
 }
 
 void rc_wirelessMessageAckReceived(wirelessMessage message, bool) {
-	Serial.print("received ack message ");
-	Serial.println(message.type);
+	//Serial.print("received ack message ");
 	if(message.type == MESSAGE_GET_PARAMS && menu_get_current() == MENU_SET_MOTOR_SPEED) {
 		settingParameters = message.parameters;
 		updateInputMotorParameters();
