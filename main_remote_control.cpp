@@ -46,8 +46,8 @@ void displayMotorStatus() {
 	updatingMotorStatus = true;
 	display_lcd.clear();
 	display_lcd.setCursor(0, 0);
-	display_lcd.print("M1 STATUS ");
-	display_lcd.setCursor(9, 0);
+	display_lcd.print("M STATUS ");
+	display_lcd.setCursor(8, 0);
 	display_lcd.print(selectedMotorNumber);
 	display_lcd.setCursor(10, 0);
 	display_lcd.print("S=");
@@ -584,12 +584,24 @@ void keypadListener(Key *keys, int keysLen) {
 					case '1':
 					case '2':
 					case '3':
-					case '4':
-					case '5':
-					case '6':
 						if(okHold) {
 							int motorNumber = keys[i].kchar - '0';
 							start_program_motor(motorNumber);
+						}
+						break;
+					case '*':
+						if(okHold) {
+							start_program_motor(4);	
+						}
+						break;
+					case '0':
+						if(okHold) {
+							start_program_motor(5);	
+						}
+					break;
+					case '#':
+						if(okHold) {
+							start_program_motor(6);	
 						}
 					break;
 				}

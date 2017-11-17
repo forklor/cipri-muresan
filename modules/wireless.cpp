@@ -37,9 +37,11 @@ void _wireless_setup(int pinA, int pinB, int address) {
 	radio = new RF24(pinA, pinB);
 
 	radio->begin();
+	radio->setPALevel(RF24_PA_HIGH);
 	//radio->setChannel(76);
 	radio->enableAckPayload();
 	radio->enableDynamicPayloads();
+	//radio->printDetails();
 }
 
 

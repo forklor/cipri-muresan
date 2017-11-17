@@ -27,7 +27,7 @@
 #define INTERRUPT_PIN 2
 
 #define SPEED_CHANGE_STEP_MS 50 // how often to update motor speed
-#define DIRECTION_CHANGE_STOP_TIME_MS 1400 // how much to wait after speed gets to 0 before changing direction
+#define DIRECTION_CHANGE_STOP_TIME_MS 0 // how much to wait after speed gets to 0 before changing direction
 
 motorParameters settings;
 
@@ -66,8 +66,13 @@ void motorGo( uint8_t direct, uint8_t pwm) {
 	//analogWrite(PWM_MOTOR_2, pwm);
 }
 
+long lastInterruptTime = 0;
+
 void interrupt_listener() {
-	_targetDirection = _currentDirection == CW ? CCW : CW;
+	if(millis() - lastInterruptTime >= 3000) {
+		_targetDirection = _currentDirection == CW ? CCW : CW;
+		lastInterruptTime = millis();
+	}
 }
 
 void _motor_setup() {
@@ -86,11 +91,12 @@ void _motor_setup() {
 
 	pinMode(CURRENT_SEN_1, INPUT);
 	pinMode(CURRENT_SEN_2, INPUT);
-	pinMode(EN_PIN_1, OUTPUT);
-	pinMode(EN_PIN_2, OUTPUT);
 
-	digitalWrite(EN_PIN_1, HIGH);
-	digitalWrite(EN_PIN_2, HIGH);
+	//digitalWrite(EN_PIN_1, HIGH);
+	//digitalWrite(EN_PIN_2, HIGH);
+
+	pinMode(EN_PIN_1, INPUT);
+	pinMode(EN_PIN_2, INPUT);
 
 	_lastLoopMillis = millis();
 
@@ -98,7 +104,7 @@ void _motor_setup() {
 	_currentSpeed = _targetSpeed = 0;
 	_currentDirection = _targetDirection = CW;
 
-	attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN), interrupt_listener, CHANGE);
+	attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN), interrupt_listener, FALLING);
 }
 
 void motor_start() {
@@ -126,6 +132,7 @@ void motor_stop_brake() {
 }
 
 void motor_toggle_start_stop() {
+	_running = !_running;
 	_targetSpeed = _targetSpeed > 0 ? 0 : settings.maxSpeed;
 	_targetDirection = _currentDirection;
 	if(_targetSpeed > 0) _directionChangeMillis = millis();
@@ -142,7 +149,10 @@ void motor_switch_direction() {
 
 void motor_set_parameters(motorParameters params) {
 	settings = params;
-	if(_running) _targetSpeed = settings.maxSpeed;
+
+	if(_running)  {
+		_targetSpeed = settings.maxSpeed;
+	}
 }
 
 motorParameters motor_get_parameters() {
@@ -215,18 +225,14 @@ void _motor_loop(long milliseconds) {
 		motorGo(_currentDirection, _currentSpeed);
 	}
 
-	// Serial.print("cs1:");
-	// Serial.print(analogRead(CURRENT_SEN_1));
-	// Serial.print(" cs2:");
-	// Serial.print(analogRead(CURRENT_SEN_2));
-	// Serial.print(" en1:");
-	// Serial.print(analogRead(EN_PIN_1));
-	// Serial.print(" en2:");
-	// Serial.print(analogRead(EN_PIN_2));
-	// Serial.print("\n");
+	Serial.print("cs1:");
+	Serial.print(analogRead(CURRENT_SEN_1));
+	Serial.print(" cs2:");
+	Serial.print(analogRead(CURRENT_SEN_2));
+	Serial.print(" en1:");
+	Serial.print(digitalRead(EN_PIN_1));
+	Serial.print(" en2:");
+	Serial.print(digitalRead(EN_PIN_2));
+	Serial.print("\n");
 
-
-	if (_currentSpeed == _targetSpeed && _currentSpeed > 0 && analogRead(CURRENT_SEN_1) < CS_THRESHOLD) {
-		//motor_switch_direction();
-	}
 }

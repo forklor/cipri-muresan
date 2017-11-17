@@ -11,6 +11,12 @@
 #include "modules/wireless.h"
 #include "modules/MemoryFree.h"
 
+void saveMotorParameters(motorParameters params) {
+	int check_memory = MEMORY_CHECK_VALUE;
+	EEPROM.put(0, check_memory);
+	EEPROM.put(sizeof(int), params);
+}
+
 wirelessMessage m_wirelessMessageReceived(wirelessMessage message) {
 	Serial.print(F("received message "));
 	Serial.println(message.type);
@@ -24,9 +30,10 @@ wirelessMessage m_wirelessMessageReceived(wirelessMessage message) {
 			Serial.print(message.parameters.maxSpeed);
 			Serial.print(F("acc:"));
 			Serial.print(message.parameters.acceleration);
-			Serial.print(F("decc:"));	
+			Serial.print(F("decc:"));
 			Serial.println(message.parameters.decelerationPercentage);
 			motor_set_parameters(message.parameters);
+			saveMotorParameters(message.parameters);
 			break;
 		case MESSAGE_GET_PARAMS:
 			message.parameters = motor_get_parameters();
@@ -50,11 +57,7 @@ wirelessMessage m_wirelessMessageReceived(wirelessMessage message) {
 	return message;
 }
 
-void saveMotorParameters(motorParameters params) {
-	int check_memory = MEMORY_CHECK_VALUE;
-	EEPROM.put(0, check_memory);
-	EEPROM.put(sizeof(int), params);
-}
+
 
 void _setup() {
 
@@ -98,29 +101,29 @@ void _loop() {
 	// 	Serial.println(freeMemory());
 	// }
 
-	// if (Serial.available() > 0) {
-	// 	char receivedChar = Serial.read();
-	// 	switch(receivedChar) {
-	// 		case 's':
-	// 			motor_toggle_start_stop();
-	// 			break;
-	// 		case 'x':
-	// 			motor_stop();
-	// 			break;
-	// 		case 'c':
-	// 			motor_stop_brake();
-	// 			break;
-	// 		case 'b':
-	// 			motor_start();
-	// 			break;
-	// 		case 'd':
-	// 			motor_switch_direction();
-	// 			break;
-	// 		default:
-	// 			Serial.print(F("Unknown command "));
-	// 			Serial.println(receivedChar);
-	// 	}
-	// }
+	if (Serial.available() > 0) {
+		char receivedChar = Serial.read();
+		switch(receivedChar) {
+			case 's':
+				motor_toggle_start_stop();
+				break;
+			case 'x':
+				motor_stop();
+				break;
+			case 'c':
+				motor_stop_brake();
+				break;
+			case 'b':
+				motor_start();
+				break;
+			case 'd':
+				motor_switch_direction();
+				break;
+			default:
+				Serial.print(F("Unknown command "));
+				Serial.println(receivedChar);
+		}
+	}
 }
 
 #endif //MOTOR_CONTROLLER
