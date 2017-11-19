@@ -193,16 +193,16 @@ void rc_wirelessMessageAckReceived(wirelessMessage message, bool) {
 	if(message.type == MESSAGE_GET_PARAMS && menu_get_current() == MENU_SET_MOTOR_SPEED) {
 		settingParameters = message.parameters;
 		updateInputMotorParameters();
-		Serial.print("s: ");
-		Serial.print(message.parameters.maxSpeed);
-		Serial.print(" a: ");
-		Serial.print(message.parameters.acceleration);
-		Serial.print(" d: ");
-		Serial.print(message.parameters.decelerationPercentage);
-		Serial.print(" cs: ");
-		Serial.print(message.parameters.csThreshold);
-		Serial.print(" t: ");
-		Serial.println(message.parameters.changeDirTime);
+		// Serial.print("s: ");
+		// Serial.print(message.parameters.maxSpeed);
+		// Serial.print(" a: ");
+		// Serial.print(message.parameters.acceleration);
+		// Serial.print(" d: ");
+		// Serial.print(message.parameters.decelerationPercentage);
+		// Serial.print(" cs: ");
+		// Serial.print(message.parameters.csThreshold);
+		// Serial.print(" t: ");
+		// Serial.println(message.parameters.changeDirTime);
 	}
 
 	if(message.type == MESSAGE_MOTOR_STATUS
@@ -211,14 +211,14 @@ void rc_wirelessMessageAckReceived(wirelessMessage message, bool) {
 		&& menu_get_display() == MENU_GET_MOTOR_STATUS) {
 		currentMotorStatus = message.status;
 		displayMotorStatus();
-		Serial.print("s: ");
-		Serial.print(message.status.speed);
-		Serial.print(" d: ");
-		Serial.print(message.status.direction);
-		Serial.print(" cs1: ");
-		Serial.print(message.status.cs1);
-		Serial.print(" cs2: ");
-		Serial.println(message.status.cs2);
+		// Serial.print("s: ");
+		// Serial.print(message.status.speed);
+		// Serial.print(" d: ");
+		// Serial.print(message.status.direction);
+		// Serial.print(" cs1: ");
+		// Serial.print(message.status.cs1);
+		// Serial.print(" cs2: ");
+		// Serial.println(message.status.cs2);
 	}
 }
 
@@ -612,7 +612,7 @@ void keypadListener(Key *keys, int keysLen) {
 void _setup() {
 
 	Serial.begin(9600);
-	Serial.println("Remote control program running");
+	Serial.println(F("Remote control program running"));
 	_wireless_setup(A0, A1, WIRELESS_REMOTE);
 	wireless_listen_ack(rc_wirelessMessageAckReceived);
 	_keypad_setup(keypadListener);

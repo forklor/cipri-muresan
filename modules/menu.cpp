@@ -12,7 +12,7 @@ void updateDisplay();
 char selectedMenu;
 
 void menuUseEventListener(MenuUseEvent used) {
-	Serial.print("Menu use ");
+	Serial.print(F("Menu use "));
 	Serial.print(used.item.getName());
 	Serial.println(used.item.getShortkey());
 	selectedMenu = used.item.getShortkey();
@@ -23,9 +23,9 @@ long lastStepMs;
 void menuChangeEventListener(MenuChangeEvent changed) {
 
 	updateDisplay();
-	Serial.print("Menu change ");
+	Serial.print(F("Menu change "));
 	Serial.print(changed.from.getName());
-	Serial.print(" ");
+	Serial.print(F(" "));
 	Serial.println(changed.to.getName());
 }
 
@@ -34,15 +34,15 @@ MenuBackend menu = MenuBackend(menuUseEventListener, menuChangeEventListener);
 MenuItem mainTimer = MenuItem("Auto Timer", MENU_TIMER);
 MenuItem mainManual = MenuItem("Manual", MENU_MANUAL);
 
-MenuItem manualRunTime = MenuItem("Set Run Time", MENU_MANUAL_SET_RUN_TIME);
-MenuItem manualStopTime = MenuItem("Set Stop Time", MENU_MANUAL_SET_STOP_TIME);
+MenuItem manualRunTime = MenuItem("R", MENU_MANUAL_SET_RUN_TIME);
+MenuItem manualStopTime = MenuItem("S", MENU_MANUAL_SET_STOP_TIME);
 
-MenuItem setMotorSpeed = MenuItem("Set Motor speed", MENU_SET_MOTOR_SPEED);
-MenuItem setMotorAccelertion = MenuItem("Set Motor acc", MENU_SET_MOTOR_ACCELERATION);
-MenuItem setMotorDeceleration = MenuItem("Set Motor deecc", MENU_SET_MOTOR_DECELERATION);
-MenuItem setMotorCs = MenuItem("Set Motor cs", MENU_SET_MOTOR_CS);
-MenuItem setMotorTime = MenuItem("Set Motor time", MENU_SET_MOTOR_CHANGE_TIME);
-MenuItem getMotorStatus = MenuItem("Get Motor Status", MENU_GET_MOTOR_STATUS);
+MenuItem setMotorSpeed = MenuItem("MS", MENU_SET_MOTOR_SPEED);
+MenuItem setMotorAccelertion = MenuItem("MA", MENU_SET_MOTOR_ACCELERATION);
+MenuItem setMotorDeceleration = MenuItem("MD", MENU_SET_MOTOR_DECELERATION);
+MenuItem setMotorCs = MenuItem("MCS", MENU_SET_MOTOR_CS);
+MenuItem setMotorTime = MenuItem("MT", MENU_SET_MOTOR_CHANGE_TIME);
+MenuItem getMotorStatus = MenuItem("MS", MENU_GET_MOTOR_STATUS);
 
 void updateDisplay() {
 
@@ -91,22 +91,22 @@ void updateDisplay() {
 
 
 void menu_up() {
-	Serial.println("menu move up");
+	//Serial.println("menu move up");
 	menu.moveUp();
 }
 
 void menu_down() {
-	Serial.println("menu move down");
+	// Serial.println("menu move down");
 	menu.moveDown();
 }
 
 void menu_right() {
-	Serial.println("menu move right");
+	//Serial.println("menu move right");
 	menu.moveRight();
 }
 
 void menu_left() {
-	Serial.println("menu move left");
+	//Serial.println("menu move left");
 	menu.moveLeft();
 }
 

@@ -104,7 +104,7 @@ void _wireless_loop(long milliseconds) {
 				waitingForAck = false;
 			}
 			if(!waitingForAck) {
-				Serial.print("received ack");
+				Serial.print(F("received ack"));
 				Serial.println(__targetAddress);
 				checkIfMultipleMessages();
 			}
