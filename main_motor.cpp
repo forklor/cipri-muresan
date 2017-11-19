@@ -2,7 +2,7 @@
 
 #ifdef MOTOR_CONTROLLER
 
-#define MEMORY_CHECK_VALUE 34
+#define MEMORY_CHECK_VALUE 37
 
 #include <Arduino.h>
 #include <EEPROM.h>
@@ -78,7 +78,7 @@ void _setup() {
 			100, 			// Speed
 			20, 			// Accelereration step
 			50, 			// Decceleration percentage
-			15, 			// CS Threshold
+			500, 			// CS Threshold
 			20000  			// Change dir time
 		});
 	}

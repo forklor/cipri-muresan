@@ -652,11 +652,11 @@ void _loop() {
 		lastUpdateStatusTime = milliseconds;
 	}
 
-	if(milliseconds - displayFreeMemoryMs >= 1000) {
-		displayFreeMemoryMs = milliseconds;
-		// Serial.print("freeMemory()=");
-		//Serial.println(freeMemory());
-	}
+	// if(milliseconds - displayFreeMemoryMs >= 1000) {
+	// 	displayFreeMemoryMs = milliseconds;
+	// 	// Serial.print("freeMemory()=");
+	// 	//Serial.println(freeMemory());
+	// }
 }
 
 #endif //MOTOR_REMOTE_CONTROLLER
