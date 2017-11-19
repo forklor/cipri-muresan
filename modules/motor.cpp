@@ -26,6 +26,8 @@
 
 #define INTERRUPT_PIN 2
 
+#define CS_DIFFERENCE_MAX 300
+
 #define SPEED_CHANGE_STEP_MS 50 // how often to update motor speed
 #define DIRECTION_CHANGE_STOP_TIME_MS 0 // how much to wait after speed gets to 0 before changing direction
 
@@ -225,9 +227,18 @@ void _motor_loop(long milliseconds) {
 		motorGo(_currentDirection, _currentSpeed);
 	}
 
-	if (_currentSpeed == _targetSpeed && _currentSpeed > 0 && analogRead(CURRENT_SEN_1) + analogRead(CURRENT_SEN_2) >= settings.csThreshold) {
+	if (_currentSpeed == _targetSpeed && _currentSpeed > 0 && 
+		(analogRead(CURRENT_SEN_1)  > settings.csThreshold) || 
+		(analogRead(CURRENT_SEN_2)  > settings.csThreshold)
+	) {
 		motor_switch_direction();
  	}
+
+
+	if(_currentSpeed == _targetSpeed && _currentSpeed > 0 &&
+		abs(analogRead(CURRENT_SEN_1) - analogRead(CURRENT_SEN_2)) > CS_DIFFERENCE_MAX) {
+		motor_stop();
+	}
 
 
 	// Serial.print("cs1:");
