@@ -58,12 +58,12 @@ void displayMotorStatus() {
 	display_lcd.setCursor(2, 1);
 	display_lcd.print(currentMotorStatus.direction);
 	display_lcd.setCursor(3, 1);
-	display_lcd.print("EN1=");
-	display_lcd.setCursor(7, 1);
+	display_lcd.print("C=");
+	display_lcd.setCursor(5, 1);
 	display_lcd.print(currentMotorStatus.cs1);
 	display_lcd.setCursor(9, 1);
-	display_lcd.print("EN2=");
-	display_lcd.setCursor(13, 1);
+	display_lcd.print("C=");
+	display_lcd.setCursor(11, 1);
 	display_lcd.print(currentMotorStatus.cs2);
 	lastUpdateStatusTime = millis();
 }

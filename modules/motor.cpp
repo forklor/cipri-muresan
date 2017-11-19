@@ -163,8 +163,8 @@ motorStatus motor_get_status() {
 	motorStatus status = {
 		_currentSpeed,
 		_currentDirection,
-		digitalRead(EN_PIN_1),
-		digitalRead(EN_PIN_2)
+		analogRead(CURRENT_SEN_1),
+		analogRead(CURRENT_SEN_2)
 	};
 
 	return status;
@@ -225,14 +225,14 @@ void _motor_loop(long milliseconds) {
 		motorGo(_currentDirection, _currentSpeed);
 	}
 
-	// Serial.print("cs1:");
-	// Serial.print(analogRead(CURRENT_SEN_1));
-	// Serial.print(" cs2:");
-	// Serial.print(analogRead(CURRENT_SEN_2));
-	// Serial.print(" en1:");
-	// Serial.print(digitalRead(EN_PIN_1));
-	// Serial.print(" en2:");
-	// Serial.print(digitalRead(EN_PIN_2));
-	// Serial.print("\n");
+	Serial.print("cs1:");
+	Serial.print(analogRead(CURRENT_SEN_1));
+	Serial.print(" cs2:");
+	Serial.print(analogRead(CURRENT_SEN_2));
+	Serial.print(" en1:");
+	Serial.print(digitalRead(EN_PIN_1));
+	Serial.print(" en2:");
+	Serial.print(digitalRead(EN_PIN_2));
+	Serial.print("\n");
 
 }
