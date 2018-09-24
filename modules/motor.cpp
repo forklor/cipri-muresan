@@ -30,6 +30,7 @@
 
 #define SPEED_CHANGE_STEP_MS 50 // how often to update motor speed
 #define DIRECTION_CHANGE_STOP_TIME_MS 0 // how much to wait after speed gets to 0 before changing direction
+#define TIME_TO_WAIT_BEFORE_READING_CS_VALUE_MS 1000 // how much time to wait before reaching top speed before compare CS value to csThreshold
 
 motorParameters settings;
 
@@ -41,6 +42,7 @@ volatile int _targetDirection;
 long _lastLoopMillis;
 long _directionChangeStopMillis;
 long _directionChangeMillis;
+long _timeWhenTargetSpeedReached;
 
 bool _running;
 
@@ -105,6 +107,7 @@ void _motor_setup() {
 	_running = false;
 	_currentSpeed = _targetSpeed = 0;
 	_currentDirection = _targetDirection = CW;
+	_timeWhenTargetSpeedReached = 0;
 
 	attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN), interrupt_listener, FALLING);
 }
@@ -192,12 +195,16 @@ void _motor_loop(long milliseconds) {
 			}
 			_currentSpeed += diff;
 			changed = true;
-		} else if(_targetSpeed > 0 && milliseconds - _directionChangeMillis >= settings.changeDirTime) {
-			Serial.println(F("Changing direction, time passed"));
-			motor_switch_direction();
+		} else {
+			if(!_timeWhenTargetSpeedReached) _timeWhenTargetSpeedReached = milliseconds;
+			if(_targetSpeed > 0 && milliseconds - _directionChangeMillis >= settings.changeDirTime) {
+				_timeWhenTargetSpeedReached = 0;
+				Serial.println(F("Changing direction, time passed"));
+				motor_switch_direction();
+			}
 		}
 	} else {
-
+		_timeWhenTargetSpeedReached = 0;
 		if(_currentSpeed == 0) {
 			// When reaching speed 0, it takes a while for the motor to fully stop,
 			// To prevent any sudden movement, wait some time before changing speed and direction
@@ -227,17 +234,26 @@ void _motor_loop(long milliseconds) {
 		motorGo(_currentDirection, _currentSpeed);
 	}
 
-	if (_currentSpeed == _targetSpeed && _currentSpeed > 0 && 
+	// If motor is stuck when trying to go in one direction,
+	// switch direction
+	if (_currentSpeed == _targetSpeed &&
+		_currentSpeed > 0 && 
+		_timeWhenTargetSpeedReached > 0 &&
+		milliseconds - _timeWhenTargetSpeedReached > TIME_TO_WAIT_BEFORE_READING_CS_VALUE_MS &&
 		(analogRead(CURRENT_SEN_1)  > settings.csThreshold) || 
 		(analogRead(CURRENT_SEN_2)  > settings.csThreshold)
 	) {
 		motor_switch_direction();
+		return;
  	}
 
-
-	if(_currentSpeed == _targetSpeed && _currentSpeed > 0 &&
+ 	// Detect if motor is stuck, stop it if it is
+	if(_currentSpeed == _targetSpeed &&
+		_currentSpeed > 0 &&
 		abs(analogRead(CURRENT_SEN_1) - analogRead(CURRENT_SEN_2)) > CS_DIFFERENCE_MAX) {
+
 		motor_stop();
+		return;
 	}
 
 
