@@ -11,6 +11,8 @@
 #define CCW   2
 #define CS_THRESHOLD 15	 // Definition of safety current (Check: "1.3 Monster Shield Example").
 
+#define BATTERY_PIN 4
+
 #define MOTOR_A1_PIN 7
 #define MOTOR_B1_PIN 8
 
@@ -169,7 +171,8 @@ motorStatus motor_get_status() {
 		_currentSpeed,
 		_currentDirection,
 		analogRead(CURRENT_SEN_1),
-		analogRead(CURRENT_SEN_2)
+		analogRead(CURRENT_SEN_2),
+		analogRead(BATTERY_PIN)
 	};
 
 	return status;

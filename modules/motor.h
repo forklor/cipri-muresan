@@ -14,6 +14,7 @@ struct motorStatus {
 	int direction;
 	int cs1;
 	int cs2;
+	int battery;
 };
 
 void _motor_setup();

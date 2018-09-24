@@ -54,13 +54,9 @@ void displayMotorStatus() {
 	display_lcd.setCursor(12, 0);
 	display_lcd.print(currentMotorStatus.speed);
 	display_lcd.setCursor(0, 1);
-	display_lcd.print("D=");
+	display_lcd.print("B=");
 	display_lcd.setCursor(2, 1);
-	display_lcd.print(currentMotorStatus.direction);
-	display_lcd.setCursor(3, 1);
-	display_lcd.print("C=");
-	display_lcd.setCursor(5, 1);
-	display_lcd.print(currentMotorStatus.cs1);
+	display_lcd.print(currentMotorStatus.battery);
 	display_lcd.setCursor(9, 1);
 	display_lcd.print("C=");
 	display_lcd.setCursor(11, 1);
