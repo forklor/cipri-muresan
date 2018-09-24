@@ -424,30 +424,38 @@ void start_stop_all_pressed() {
 	if(validCommand) wireless_send_message(all_addresses, 6, msg);
 }
 
+bool isMenuAboutMotorInfo(char displayMenu) {
+	return (displayMenu == MENU_SET_MOTOR_CHANGE_TIME ||
+			displayMenu == MENU_SET_MOTOR_CHANGE_TIME ||
+			displayMenu == MENU_MANUAL_SET_STOP_TIME ||
+			displayMenu == MENU_GET_MOTOR_STATUS);
+}
+
 void keyReleased(char key) {
 	wirelessMessage msg;
 	char currentMenu = menu_get_current();
 	char displayMenu = menu_get_display();
 	switch(key) {
 		case '1':
-			if(currentMenu == MENU_ROOT) {
+			if(currentMenu == MENU_ROOT || isMenuAboutMotorInfo(displayMenu)) {
+
 				msg.type = MESSAGE_TOGGLE_START_STOP;
 				wireless_send_message(WIRELESS_MODULE_1, msg);
 			}
 			break;
 		case '4':
-			if(displayMenu == MENU_SET_MOTOR_CHANGE_TIME || 
-				displayMenu == MENU_MANUAL_SET_RUN_TIME ||
-				displayMenu == MENU_MANUAL_SET_STOP_TIME) {
-				setTimerValueUp(60000);
-			}
+			// if(displayMenu == MENU_SET_MOTOR_CHANGE_TIME || 
+			// 	displayMenu == MENU_MANUAL_SET_RUN_TIME ||
+			// 	displayMenu == MENU_MANUAL_SET_STOP_TIME) {
+			// 	setTimerValueUp(60000);
+			// }
 			if(currentMenu == MENU_ROOT) {
 				msg.type = MESSAGE_CHANGE_DIRECTION;
 				wireless_send_message(WIRELESS_MODULE_1, msg);
 			}
 			break;
 		case '2':
-			if(currentMenu == MENU_ROOT) {
+			if(currentMenu == MENU_ROOT || isMenuAboutMotorInfo(displayMenu)) {
 				msg.type = MESSAGE_TOGGLE_START_STOP;
 				wireless_send_message(WIRELESS_MODULE_2, msg);
 			}
@@ -459,7 +467,7 @@ void keyReleased(char key) {
 			}
 			break;
 		case '3':
-			if(currentMenu == MENU_ROOT) {
+			if(currentMenu == MENU_ROOT || isMenuAboutMotorInfo(displayMenu)) {
 				msg.type = MESSAGE_TOGGLE_START_STOP;
 				wireless_send_message(WIRELESS_MODULE_3, msg);
 			}
@@ -471,17 +479,17 @@ void keyReleased(char key) {
 			}
 			break;
 		case '*':
-			if(currentMenu == MENU_ROOT) {
+			if(currentMenu == MENU_ROOT || isMenuAboutMotorInfo(displayMenu)) {
 				msg.type = MESSAGE_TOGGLE_START_STOP;
 				wireless_send_message(WIRELESS_MODULE_4, msg);
 			}
 			break;
 		case '7':
-			if(displayMenu == MENU_SET_MOTOR_CHANGE_TIME || 
-				displayMenu == MENU_MANUAL_SET_RUN_TIME ||
-				displayMenu == MENU_MANUAL_SET_STOP_TIME) {
-				setTimerValueDown(60000);
-			}
+			// if(displayMenu == MENU_SET_MOTOR_CHANGE_TIME || 
+			// 	displayMenu == MENU_MANUAL_SET_RUN_TIME ||
+			// 	displayMenu == MENU_MANUAL_SET_STOP_TIME) {
+			// 	setTimerValueDown(60000);
+			// }
 			if(currentMenu == MENU_ROOT) {
 
 				msg.type = MESSAGE_CHANGE_DIRECTION;
@@ -489,7 +497,7 @@ void keyReleased(char key) {
 			}
 			break;
 		case '0':
-			if(currentMenu == MENU_ROOT) {
+			if(currentMenu == MENU_ROOT || isMenuAboutMotorInfo(displayMenu)) {
 				msg.type = MESSAGE_TOGGLE_START_STOP;
 				wireless_send_message(WIRELESS_MODULE_5, msg);
 			}
@@ -501,7 +509,7 @@ void keyReleased(char key) {
 			}
 			break;
 		case '#':
-			if(currentMenu == MENU_ROOT) {
+			if(currentMenu == MENU_ROOT || isMenuAboutMotorInfo(displayMenu)) {
 				msg.type = MESSAGE_TOGGLE_START_STOP;
 				wireless_send_message(WIRELESS_MODULE_6, msg);
 			}
