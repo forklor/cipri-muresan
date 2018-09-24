@@ -424,11 +424,46 @@ void start_stop_all_pressed() {
 	if(validCommand) wireless_send_message(all_addresses, 6, msg);
 }
 
+
+void start_program_timer() {
+	if(menu_get_current() == MENU_ROOT) {
+		menu_left();
+		menu_select();
+		startSettingTimeValue(timer_get_run_time(), "MOTOR RUN TIME");
+	}
+}
+
+void start_program_motor(int motorNo) {
+
+	if(menu_get_current() != MENU_ROOT) {
+		// First, exit to main menu
+		start_stop_all_pressed();
+	}
+
+	menu_right();
+	menu_select();
+	selectedMotorNumber = motorNo;
+	wirelessMessage msg;
+	msg.type = MESSAGE_GET_PARAMS;
+	wireless_send_message(motorNo, msg);
+	updateInputMotorParameters();
+
+}
+
 bool isMenuAboutMotorInfo(char displayMenu) {
 	return (displayMenu == MENU_SET_MOTOR_CHANGE_TIME ||
 			displayMenu == MENU_SET_MOTOR_CHANGE_TIME ||
 			displayMenu == MENU_MANUAL_SET_STOP_TIME ||
 			displayMenu == MENU_GET_MOTOR_STATUS);
+}
+
+bool isMenuAboutCurrentMotorInfo(char displayMenu, int motorNo) {
+
+	return ((displayMenu == MENU_SET_MOTOR_CHANGE_TIME ||
+			displayMenu == MENU_SET_MOTOR_CHANGE_TIME ||
+			displayMenu == MENU_MANUAL_SET_STOP_TIME ||
+			displayMenu == MENU_GET_MOTOR_STATUS) && 
+			selectedMotorNumber == motorNo);
 }
 
 void keyReleased(char key) {
@@ -437,10 +472,11 @@ void keyReleased(char key) {
 	char displayMenu = menu_get_display();
 	switch(key) {
 		case '1':
-			if(currentMenu == MENU_ROOT || isMenuAboutMotorInfo(displayMenu)) {
-
+			if(currentMenu == MENU_ROOT || isMenuAboutCurrentMotorInfo(displayMenu, WIRELESS_MODULE_1)) {
 				msg.type = MESSAGE_TOGGLE_START_STOP;
 				wireless_send_message(WIRELESS_MODULE_1, msg);
+			} else if(isMenuAboutMotorInfo(displayMenu)) {
+				start_program_motor(WIRELESS_MODULE_1);
 			}
 			break;
 		case '4':
@@ -455,9 +491,11 @@ void keyReleased(char key) {
 			}
 			break;
 		case '2':
-			if(currentMenu == MENU_ROOT || isMenuAboutMotorInfo(displayMenu)) {
+			if(currentMenu == MENU_ROOT || isMenuAboutCurrentMotorInfo(displayMenu, WIRELESS_MODULE_2)) {
 				msg.type = MESSAGE_TOGGLE_START_STOP;
 				wireless_send_message(WIRELESS_MODULE_2, msg);
+			} else if(isMenuAboutMotorInfo(displayMenu)) {
+				start_program_motor(WIRELESS_MODULE_2);
 			}
 			break;
 		case '5':
@@ -467,9 +505,11 @@ void keyReleased(char key) {
 			}
 			break;
 		case '3':
-			if(currentMenu == MENU_ROOT || isMenuAboutMotorInfo(displayMenu)) {
+			if(currentMenu == MENU_ROOT || isMenuAboutCurrentMotorInfo(displayMenu, WIRELESS_MODULE_3)) {
 				msg.type = MESSAGE_TOGGLE_START_STOP;
 				wireless_send_message(WIRELESS_MODULE_3, msg);
+			} else if(isMenuAboutMotorInfo(displayMenu)) {
+				start_program_motor(WIRELESS_MODULE_3);
 			}
 			break;
 		case '6':
@@ -479,9 +519,11 @@ void keyReleased(char key) {
 			}
 			break;
 		case '*':
-			if(currentMenu == MENU_ROOT || isMenuAboutMotorInfo(displayMenu)) {
+			if(currentMenu == MENU_ROOT || isMenuAboutCurrentMotorInfo(displayMenu, WIRELESS_MODULE_4)) {
 				msg.type = MESSAGE_TOGGLE_START_STOP;
 				wireless_send_message(WIRELESS_MODULE_4, msg);
+			} else if(isMenuAboutMotorInfo(displayMenu)) {
+				start_program_motor(WIRELESS_MODULE_4);
 			}
 			break;
 		case '7':
@@ -491,15 +533,16 @@ void keyReleased(char key) {
 			// 	setTimerValueDown(60000);
 			// }
 			if(currentMenu == MENU_ROOT) {
-
 				msg.type = MESSAGE_CHANGE_DIRECTION;
 				wireless_send_message(WIRELESS_MODULE_4, msg);
 			}
 			break;
 		case '0':
-			if(currentMenu == MENU_ROOT || isMenuAboutMotorInfo(displayMenu)) {
+			if(currentMenu == MENU_ROOT || isMenuAboutCurrentMotorInfo(displayMenu, WIRELESS_MODULE_5)) {
 				msg.type = MESSAGE_TOGGLE_START_STOP;
 				wireless_send_message(WIRELESS_MODULE_5, msg);
+			} else if(isMenuAboutMotorInfo(displayMenu)) {
+				start_program_motor(WIRELESS_MODULE_5);
 			}
 			break;
 		case '8':
@@ -509,9 +552,11 @@ void keyReleased(char key) {
 			}
 			break;
 		case '#':
-			if(currentMenu == MENU_ROOT || isMenuAboutMotorInfo(displayMenu)) {
+			if(currentMenu == MENU_ROOT || isMenuAboutCurrentMotorInfo(displayMenu, WIRELESS_MODULE_6)) {
 				msg.type = MESSAGE_TOGGLE_START_STOP;
 				wireless_send_message(WIRELESS_MODULE_6, msg);
+			} else if(isMenuAboutMotorInfo(displayMenu)) {
+				start_program_motor(WIRELESS_MODULE_6);
 			}
 			break;
 		case '9':
@@ -536,26 +581,6 @@ void keyReleased(char key) {
 		default:
 			//do nothing
 			break;
-	}
-}
-
-void start_program_timer() {
-	if(menu_get_current() == MENU_ROOT) {
-		menu_left();
-		menu_select();
-		startSettingTimeValue(timer_get_run_time(), "MOTOR RUN TIME");
-	}
-}
-
-void start_program_motor(int motorNo) {
-	if(menu_get_current() == MENU_ROOT) {
-		menu_right();
-		menu_select();
-		selectedMotorNumber = motorNo;
-		wirelessMessage msg;
-		msg.type = MESSAGE_GET_PARAMS;
-		wireless_send_message(motorNo, msg);
-		updateInputMotorParameters();
 	}
 }
 

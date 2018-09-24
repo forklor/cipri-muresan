@@ -37,7 +37,7 @@ MenuItem mainManual = MenuItem("Manual", MENU_MANUAL);
 MenuItem manualRunTime = MenuItem("R", MENU_MANUAL_SET_RUN_TIME);
 MenuItem manualStopTime = MenuItem("S", MENU_MANUAL_SET_STOP_TIME);
 
-MenuItem setMotorSpeed = MenuItem("MS", MENU_SET_MOTOR_SPEED);
+MenuItem setMotorSpeed = MenuItem("MSP", MENU_SET_MOTOR_SPEED);
 MenuItem setMotorAccelertion = MenuItem("MA", MENU_SET_MOTOR_ACCELERATION);
 MenuItem setMotorDeceleration = MenuItem("MD", MENU_SET_MOTOR_DECELERATION);
 MenuItem setMotorCs = MenuItem("MCS", MENU_SET_MOTOR_CS);
@@ -90,25 +90,25 @@ void updateDisplay() {
 }
 
 void menu_up() {
-	Serial.print("menu move up");
+	Serial.print("menu move up ");
 	Serial.println(menu.getCurrent().getName());
 	menu.moveUp();
 }
 
 void menu_down() {
-	Serial.print("menu move down");
+	Serial.print("menu move down ");
 	Serial.println(menu.getCurrent().getName());
 	menu.moveDown();
 }
 
 void menu_right() {
-	Serial.print("menu move right");
+	Serial.print("menu move right ");
 	Serial.println(menu.getCurrent().getName());
 	menu.moveRight();
 }
 
 void menu_left() {
-	Serial.print("menu move left");
+	Serial.print("menu move left ");
 	Serial.println(menu.getCurrent().getName());
 	menu.moveLeft();
 }
