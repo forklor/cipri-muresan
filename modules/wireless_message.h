@@ -13,6 +13,7 @@
 
 struct wirelessMessage {
 	int type;
+	int motorModuleNumber;
 	motorParameters parameters;
 	motorStatus status;
 };

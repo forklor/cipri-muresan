@@ -21,6 +21,8 @@ wirelessMessage m_wirelessMessageReceived(wirelessMessage message) {
 	Serial.print(F("received message "));
 	Serial.println(message.type);
 
+	message.motorModuleNumber = MOTOR_MODULE_NUMBER;
+
 	switch (message.type) {
 		case MESSAGE_TOGGLE_START_STOP:
 			motor_toggle_start_stop();

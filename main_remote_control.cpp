@@ -16,6 +16,8 @@
 
 #define UPDATE_MOTOR_STATUS_MS 800
 
+#define UPDATE_BATTERY_LEVEL_MS 5000
+
 struct timerParameters {
 	long runTime;
 	long stopTime;
@@ -39,6 +41,7 @@ void timerStateChanged(bool running) {
 motorStatus currentMotorStatus;
 bool updatingMotorStatus;
 long lastUpdateStatusTime;
+long lastUpdateBatteryTime;
 motorParameters settingParameters;
 int selectedMotorNumber;
 
@@ -148,6 +151,111 @@ void saveTimerParameters(long runTime, long stopTime) {
 	EEPROM.put(sizeof(int), savedTimerParams);
 }
 
+void updateBatteryIndicator(int value,  int motorNo) {
+
+	int x = 13 + motorNo % 3;
+	int y = motorNo / 3;
+	long voltage = value / 1023 * 5;
+
+	if(voltage <= 3.46 && voltage > 3.43) {
+		byte batlevel[8] = {
+			B01110,
+			B11111,
+			B11111,
+			B11111,
+			B11111,
+			B11111,
+			B11111,
+			B11111,
+		};
+
+		display_lcd.createChar(0 , batlevel);
+		display_lcd.setCursor(x, y);
+		display_lcd.write(byte(0));
+	 }
+  
+  	if(voltage <= 3.43 && voltage > 3.38) {
+		byte batlevel[8] = {
+			B01110,
+			B10001,
+			B11111,
+			B11111,
+			B11111,
+			B11111,
+			B11111,
+			B11111,
+		};
+		display_lcd.createChar(0, batlevel);
+		display_lcd.setCursor(x, y);
+		display_lcd.write(byte(0));
+	}
+
+  	if(voltage <= 3.38 && voltage > 3.32) {
+		byte batlevel[8] = {
+			B01110,
+			B10001,
+			B10001,
+			B11111,
+			B11111,
+			B11111,
+			B11111,
+			B11111,
+		};
+
+		display_lcd.createChar(0, batlevel);
+		display_lcd.setCursor(x, y);
+		display_lcd.write(byte(0));
+	}
+	
+	if(voltage <= 3.32 && voltage > 3.26) {
+		byte batlevel[8] = {
+			B01110,
+			B10001,
+			B10001,
+			B10001,
+			B11111,
+			B11111,
+			B11111,
+			B11111,
+		};
+		display_lcd.createChar(0, batlevel);
+		display_lcd.setCursor(x, y);
+		display_lcd.write(byte(0));
+	}
+
+	if(voltage <= 3.26 && voltage > 3.21) {
+		byte batlevel[8] = {
+			B01110,
+			B10001,
+			B10001,
+			B10001,
+			B10001,
+			B11111,
+			B11111,
+			B11111,
+		};
+		display_lcd.createChar(0, batlevel);
+		display_lcd.setCursor(x, y);
+		display_lcd.write(byte(0));
+  	}
+  
+  	if(voltage < 3.21) {
+		byte batlevel[8] = {
+			B01110,
+			B10001,
+			B10001,
+			B10001,
+			B10001,
+			B10001,
+			B10001,
+			B11111,
+		};
+		display_lcd.createChar(0, batlevel);
+		display_lcd.setCursor(x, y);
+		display_lcd.write(byte(0));
+	}
+}
+
 void updateInputMotorParameters() {
 
 	if(menu_get_current() == MENU_GET_MOTOR_STATUS) {
@@ -186,7 +294,10 @@ void updateInputMotorParameters() {
 
 void rc_wirelessMessageAckReceived(wirelessMessage message, bool) {
 	//Serial.print("received ack message ");
-	if(message.type == MESSAGE_GET_PARAMS && menu_get_current() == MENU_GET_MOTOR_STATUS) {
+	if(message.type == MESSAGE_GET_PARAMS &&
+		menu_get_current() == MENU_GET_MOTOR_STATUS &&
+		selectedMotorNumber == message.motorModuleNumber) {
+
 		settingParameters = message.parameters;
 		updateInputMotorParameters();
 		// Serial.print("s: ");
@@ -203,8 +314,10 @@ void rc_wirelessMessageAckReceived(wirelessMessage message, bool) {
 
 	if(message.type == MESSAGE_MOTOR_STATUS
 		&& updatingMotorStatus
+		&& selectedMotorNumber == message.motorModuleNumber
 		&& menu_get_current() == MENU_GET_MOTOR_STATUS
 		&& menu_get_display() == MENU_GET_MOTOR_STATUS) {
+
 		currentMotorStatus = message.status;
 		displayMotorStatus();
 		// Serial.print("s: ");
@@ -216,7 +329,25 @@ void rc_wirelessMessageAckReceived(wirelessMessage message, bool) {
 		// Serial.print(" cs2: ");
 		// Serial.println(message.status.cs2);
 	}
+
+
+	if(message.type == MESSAGE_MOTOR_STATUS
+		&& updatingMotorStatus
+		&& menu_get_current() == MENU_ROOT
+		&& menu_get_display() == MENU_ROOT) {
+
+		updateBatteryIndicator(message.status.battery, message.motorModuleNumber);
+		// Serial.print("s: ");
+		// Serial.print(message.status.speed);
+		// Serial.print(" d: ");
+		// Serial.print(message.status.direction);
+		// Serial.print(" cs1: ");
+		// Serial.print(message.status.cs1);
+		// Serial.print(" cs2: ");
+		// Serial.println(message.status.cs2);
+	}
 }
+
 
 void ok_pressed() {
 
@@ -648,6 +779,7 @@ void _setup() {
 	_display_setup();
 	_menu_setup();
 
+	lastUpdateBatteryTime = 0;
 	timerParameters savedTimerParams;
 	int check_saved_memory;
 	EEPROM.get(0, check_saved_memory);
@@ -674,12 +806,33 @@ void _loop() {
 	_menu_loop(milliseconds);
 	_display_loop(milliseconds);
 
-	if(updatingMotorStatus && milliseconds - lastUpdateStatusTime >= UPDATE_MOTOR_STATUS_MS) {
+	if(updatingMotorStatus &&
+		milliseconds - lastUpdateStatusTime >= UPDATE_MOTOR_STATUS_MS) {
+
 		wirelessMessage msg;
 		msg.type = MESSAGE_MOTOR_STATUS;
 		wireless_send_message(selectedMotorNumber, msg);
 		lastUpdateStatusTime = milliseconds;
 	}
+
+	if(menu_get_current() == MENU_ROOT && 
+		milliseconds - lastUpdateBatteryTime >= UPDATE_BATTERY_LEVEL_MS) {
+
+		int all_addresses[6] = {
+			WIRELESS_MODULE_1,
+			WIRELESS_MODULE_2,
+			WIRELESS_MODULE_3,
+			WIRELESS_MODULE_4,
+			WIRELESS_MODULE_5,
+			WIRELESS_MODULE_6
+		};
+
+		wirelessMessage msg;
+		msg.type = MESSAGE_MOTOR_STATUS;
+		wireless_send_message(all_addresses, 6, msg);
+		lastUpdateBatteryTime = milliseconds;	
+	}
+
 
 	// if(milliseconds - displayFreeMemoryMs >= 1000) {
 	// 	displayFreeMemoryMs = milliseconds;
