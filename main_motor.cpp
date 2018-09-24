@@ -95,11 +95,11 @@ void _loop() {
 	_motor_loop(milliseconds);
 	_wireless_loop(milliseconds);
 
-	// if(milliseconds - displayFreeMemoryMs >= 1000) {
-	// 	displayFreeMemoryMs = milliseconds;
-	// 	Serial.print("freeMemory()=");
-	// 	Serial.println(freeMemory());
-	// }
+	if(milliseconds - displayFreeMemoryMs >= 1000) {
+		displayFreeMemoryMs = milliseconds;
+		Serial.print("battery()=");
+		Serial.println(analogRead(4));
+	}
 
 	if (Serial.available() > 0) {
 		char receivedChar = Serial.read();

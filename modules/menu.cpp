@@ -89,24 +89,27 @@ void updateDisplay() {
 	}
 }
 
-
 void menu_up() {
-	//Serial.println("menu move up");
+	Serial.print("menu move up");
+	Serial.println(menu.getCurrent().getName());
 	menu.moveUp();
 }
 
 void menu_down() {
-	// Serial.println("menu move down");
+	Serial.print("menu move down");
+	Serial.println(menu.getCurrent().getName());
 	menu.moveDown();
 }
 
 void menu_right() {
-	//Serial.println("menu move right");
+	Serial.print("menu move right");
+	Serial.println(menu.getCurrent().getName());
 	menu.moveRight();
 }
 
 void menu_left() {
-	//Serial.println("menu move left");
+	Serial.print("menu move left");
+	Serial.println(menu.getCurrent().getName());
 	menu.moveLeft();
 }
 
@@ -132,16 +135,16 @@ void _menu_setup() {
 	manualRunTime.addAfter(manualStopTime);
 	manualStopTime.addAfter(manualRunTime);
 
-	mainManual.addRight(setMotorSpeed);
-	mainTimer.addRight(setMotorSpeed);
+	mainManual.addRight(getMotorStatus);
+	mainTimer.addRight(getMotorStatus);
 
+	getMotorStatus.addAfter(setMotorSpeed);
 	setMotorSpeed.addAfter(setMotorAccelertion);
 	setMotorAccelertion.addAfter(setMotorDeceleration);
 	setMotorDeceleration.addAfter(setMotorCs);
 	setMotorCs.addAfter(setMotorTime);
 	setMotorTime.addAfter(getMotorStatus);
-	getMotorStatus.addAfter(setMotorSpeed);
-
+	
 	menu.moveDown();
 }
 

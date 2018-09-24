@@ -154,7 +154,7 @@ void saveTimerParameters(long runTime, long stopTime) {
 
 void updateInputMotorParameters() {
 
-	if(menu_get_current() == MENU_SET_MOTOR_SPEED) {
+	if(menu_get_current() == MENU_GET_MOTOR_STATUS) {
 		char displayMenu = menu_get_display();
 		char displayName[16] = "";
 		switch(displayMenu) {
@@ -190,7 +190,7 @@ void updateInputMotorParameters() {
 
 void rc_wirelessMessageAckReceived(wirelessMessage message, bool) {
 	//Serial.print("received ack message ");
-	if(message.type == MESSAGE_GET_PARAMS && menu_get_current() == MENU_SET_MOTOR_SPEED) {
+	if(message.type == MESSAGE_GET_PARAMS && menu_get_current() == MENU_GET_MOTOR_STATUS) {
 		settingParameters = message.parameters;
 		updateInputMotorParameters();
 		// Serial.print("s: ");
@@ -207,7 +207,7 @@ void rc_wirelessMessageAckReceived(wirelessMessage message, bool) {
 
 	if(message.type == MESSAGE_MOTOR_STATUS
 		&& updatingMotorStatus
-		&& menu_get_current() == MENU_SET_MOTOR_SPEED
+		&& menu_get_current() == MENU_GET_MOTOR_STATUS
 		&& menu_get_display() == MENU_GET_MOTOR_STATUS) {
 		currentMotorStatus = message.status;
 		displayMotorStatus();
@@ -256,7 +256,7 @@ void ok_pressed() {
 			menu_down();
 			startSettingTimeValue(timer_get_run_time(), "MOTOR RUN TIME");
 		}
-	} else if(currentMenu == MENU_SET_MOTOR_SPEED) {
+	} else if(currentMenu == MENU_GET_MOTOR_STATUS) {
 		char displayMenu = menu_get_display();
 		// Save previously set item
 		bool updateParams = true;
@@ -317,7 +317,7 @@ void up_pressed() {
 		setTimerValueUp();
 	}
 
-	if(current == MENU_SET_MOTOR_SPEED) {
+	if(current == MENU_GET_MOTOR_STATUS) {
 		switch(menu_get_display()) {
 			case MENU_SET_MOTOR_SPEED:
 			case MENU_SET_MOTOR_ACCELERATION:
@@ -345,7 +345,7 @@ void down_pressed() {
 		setTimerValueDown();
 	}
 
-	if(current == MENU_SET_MOTOR_SPEED) {
+	if(current == MENU_GET_MOTOR_STATUS) {
 		switch(menu_get_display()) {
 			case MENU_SET_MOTOR_SPEED:
 			case MENU_SET_MOTOR_ACCELERATION:
@@ -365,7 +365,7 @@ void down_pressed() {
 void start_stop_all_pressed() {
 
 	char currentMenu = menu_get_current();
-	if(currentMenu == MENU_MANUAL_SET_RUN_TIME || currentMenu == MENU_SET_MOTOR_SPEED) {
+	if(currentMenu == MENU_MANUAL_SET_RUN_TIME || currentMenu == MENU_GET_MOTOR_STATUS) {
 		updatingMotorStatus = false;
 		menu_use(MENU_ROOT);
 		menu_down();
