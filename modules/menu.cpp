@@ -29,6 +29,13 @@ bool motor4_disabled;
 bool motor5_disabled;
 bool motor6_disabled;
 
+bool motor1_reachable;
+bool motor2_reachable;
+bool motor3_reachable;
+bool motor4_reachable;
+bool motor5_reachable;
+bool motor6_reachable;
+
 
 int UPDATE_DISPLAY_TIME_MS;
 
@@ -68,7 +75,7 @@ MenuItem setMotorCs = MenuItem("MCS", MENU_SET_MOTOR_CS);
 MenuItem setMotorTime = MenuItem("MT", MENU_SET_MOTOR_CHANGE_TIME);
 MenuItem getMotorStatus = MenuItem("MS", MENU_GET_MOTOR_STATUS);
 
-void displayBatteryStatus(int value, int motorNo, bool running, bool disabled) {
+void displayBatteryStatus(int value, int motorNo, bool running, bool disabled, bool reachable) {
 
 	int x = 12 + motorNo % 4 + ((int)motorNo / 4);
 	int y = motorNo / 4;
@@ -258,12 +265,12 @@ void updateDisplay() {
 		display_lcd.print(display);
 		free(display);
 
-		displayBatteryStatus(bat1, 1, motor1_running, motor1_disabled);
-		displayBatteryStatus(bat2, 2, motor2_running, motor2_disabled);
-		displayBatteryStatus(bat3, 3, motor3_running, motor3_disabled);
-		displayBatteryStatus(bat4, 4, motor4_running, motor4_disabled);
-		displayBatteryStatus(bat5, 5, motor5_running, motor5_disabled);
-		displayBatteryStatus(bat6, 6, motor6_running, motor6_disabled);
+		displayBatteryStatus(bat1, 1, motor1_running, motor1_disabled, motor1_reachable);
+		displayBatteryStatus(bat2, 2, motor2_running, motor2_disabled, motor2_reachable);
+		displayBatteryStatus(bat3, 3, motor3_running, motor3_disabled, motor3_reachable);
+		displayBatteryStatus(bat4, 4, motor4_running, motor4_disabled, motor4_reachable);
+		displayBatteryStatus(bat5, 5, motor5_running, motor5_disabled, motor5_reachable);
+		displayBatteryStatus(bat6, 6, motor6_running, motor6_disabled, motor6_reachable);
 	}
 }
 
@@ -330,6 +337,13 @@ void _menu_setup() {
 	motor5_disabled = false;
 	motor6_disabled = false;
 
+	motor1_reachable = false;
+	motor2_reachable = false;
+	motor3_reachable = false;
+	motor4_reachable = false;
+	motor5_reachable = false;
+	motor6_reachable = false;
+
 	menu.getRoot().add(mainManual);
 	mainManual.addAfter(mainTimer);
 	mainTimer.addAfter(mainManual);
@@ -352,7 +366,7 @@ void _menu_setup() {
 	menu.moveDown();
 }
 
-void menu_set_battery_level(int level, int motorNo, bool running, bool disabled) {
+void menu_set_battery_level(int level, int motorNo, bool running, bool disabled, bool reachable) {
 	switch (motorNo) {
 		case 1:
 			bat1 = level;
@@ -387,7 +401,7 @@ void menu_set_battery_level(int level, int motorNo, bool running, bool disabled)
 		default:
 			break;
 	}
-	displayBatteryStatus(level, motorNo, running, disabled);
+	displayBatteryStatus(level, motorNo, running, disabled, reachable);
 }
 
 char menu_get_current() {

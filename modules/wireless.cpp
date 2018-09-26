@@ -11,6 +11,7 @@ byte wireless_addresses[][6] = {"1Node", "2Node", "3Node", "4Node", "5Node", "6N
 RF24 *radio;
 
 void (*_w_ack_listener)(wirelessMessage);
+void (*_w_send_timeout_listener)(wirelessMessage);
 wirelessMessage (*_w_listener)(wirelessMessage);
 
 bool listening;
@@ -90,6 +91,9 @@ void _wireless_loop(long milliseconds) {
 
 		if (timeout) {
 			Serial.println(F("Failed, response timed out."));
+			if(_w_send_timeout_listener != NULL) {
+				_w_send_timeout_listener(messageToSend);
+			}
 			radio->stopListening();
 			waitingForAck = false;
 			checkIfMultipleMessages();
@@ -156,6 +160,10 @@ void wireless_send_message(int *targets, int targets_len, wirelessMessage msg) {
 
 void wireless_listen_ack(void (*f)(wirelessMessage)) {
 	_w_ack_listener = f;
+}
+
+void wireless_listen_send_timeout(void (*f)(wirelessMessage)) {
+	_w_send_timeout_listener = f;
 }
 
 void wireless_listen(int targetAddress, wirelessMessage (*f)(wirelessMessage)) {

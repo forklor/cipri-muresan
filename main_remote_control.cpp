@@ -151,9 +151,9 @@ void saveTimerParameters(long runTime, long stopTime) {
 	EEPROM.put(sizeof(int), savedTimerParams);
 }
 
-void updateBatteryIndicator(int value,  int motorNo, bool running, bool disabled) {
+void updateBatteryIndicator(int value,  int motorNo, bool running, bool disabled, bool reachable) {
 
-	menu_set_battery_level(value, motorNo, running, disabled);
+	menu_set_battery_level(value, motorNo, running, disabled, reachable);
 }
 
 void updateInputMotorParameters() {
@@ -192,7 +192,20 @@ void updateInputMotorParameters() {
 	}
 }
 
-void rc_wirelessMessageAckReceived(wirelessMessage message, bool) {
+void rc_wirelessMessageTimeout(wirelessMessage message) {
+	if(
+		message.type == MESSAGE_MOTOR_STATUS && 
+		(
+			menu_get_display() == MENU_TIMER ||
+			menu_get_display() == MENU_MANUAL
+		)
+	) {
+
+		updateBatteryIndicator(0, message.motorModuleNumber, false, false, false);
+	}
+}
+
+void rc_wirelessMessageAckReceived(wirelessMessage message) {
 	// Serial.print("received message ");
 	// Serial.print(message.type);
 	// Serial.print("motor: ");
@@ -254,7 +267,7 @@ void rc_wirelessMessageAckReceived(wirelessMessage message, bool) {
 		Serial.print(" disabled: ");
 		Serial.print(message.status.disabled);
 
-		updateBatteryIndicator(message.status.battery, message.motorModuleNumber, message.status.speed > 0, message.status.disabled);
+		updateBatteryIndicator(message.status.battery, message.motorModuleNumber, message.status.speed > 0, message.status.disabled, true);
 		// Serial.print("s: ");
 		// Serial.print(message.status.speed);
 		// Serial.print(" d: ");
@@ -709,6 +722,7 @@ void _setup() {
 	Serial.println(F("Remote control program running"));
 	_wireless_setup(A0, A1, WIRELESS_REMOTE);
 	wireless_listen_ack(rc_wirelessMessageAckReceived);
+	wireless_listen_send_timeout(rc_wirelessMessageTimeout);
 	_keypad_setup(keypadListener);
 	_display_setup();
 	_menu_setup();
