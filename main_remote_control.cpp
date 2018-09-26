@@ -16,7 +16,7 @@
 
 #define UPDATE_MOTOR_STATUS_MS 800
 
-#define UPDATE_BATTERY_LEVEL_MS 5000
+#define UPDATE_BATTERY_LEVEL_MS 10000
 
 struct timerParameters {
 	long runTime;
@@ -151,109 +151,9 @@ void saveTimerParameters(long runTime, long stopTime) {
 	EEPROM.put(sizeof(int), savedTimerParams);
 }
 
-void updateBatteryIndicator(int value,  int motorNo) {
+void updateBatteryIndicator(int value,  int motorNo, bool running, bool disabled) {
 
-	int x = 13 + motorNo % 3;
-	int y = motorNo / 3;
-	long voltage = value / 1023 * 5;
-
-	if(voltage <= 3.46 && voltage > 3.43) {
-		byte batlevel[8] = {
-			B01110,
-			B11111,
-			B11111,
-			B11111,
-			B11111,
-			B11111,
-			B11111,
-			B11111,
-		};
-
-		display_lcd.createChar(0 , batlevel);
-		display_lcd.setCursor(x, y);
-		display_lcd.write(byte(0));
-	 }
-  
-  	if(voltage <= 3.43 && voltage > 3.38) {
-		byte batlevel[8] = {
-			B01110,
-			B10001,
-			B11111,
-			B11111,
-			B11111,
-			B11111,
-			B11111,
-			B11111,
-		};
-		display_lcd.createChar(0, batlevel);
-		display_lcd.setCursor(x, y);
-		display_lcd.write(byte(0));
-	}
-
-  	if(voltage <= 3.38 && voltage > 3.32) {
-		byte batlevel[8] = {
-			B01110,
-			B10001,
-			B10001,
-			B11111,
-			B11111,
-			B11111,
-			B11111,
-			B11111,
-		};
-
-		display_lcd.createChar(0, batlevel);
-		display_lcd.setCursor(x, y);
-		display_lcd.write(byte(0));
-	}
-	
-	if(voltage <= 3.32 && voltage > 3.26) {
-		byte batlevel[8] = {
-			B01110,
-			B10001,
-			B10001,
-			B10001,
-			B11111,
-			B11111,
-			B11111,
-			B11111,
-		};
-		display_lcd.createChar(0, batlevel);
-		display_lcd.setCursor(x, y);
-		display_lcd.write(byte(0));
-	}
-
-	if(voltage <= 3.26 && voltage > 3.21) {
-		byte batlevel[8] = {
-			B01110,
-			B10001,
-			B10001,
-			B10001,
-			B10001,
-			B11111,
-			B11111,
-			B11111,
-		};
-		display_lcd.createChar(0, batlevel);
-		display_lcd.setCursor(x, y);
-		display_lcd.write(byte(0));
-  	}
-  
-  	if(voltage < 3.21) {
-		byte batlevel[8] = {
-			B01110,
-			B10001,
-			B10001,
-			B10001,
-			B10001,
-			B10001,
-			B10001,
-			B11111,
-		};
-		display_lcd.createChar(0, batlevel);
-		display_lcd.setCursor(x, y);
-		display_lcd.write(byte(0));
-	}
+	menu_set_battery_level(value, motorNo, running, disabled);
 }
 
 void updateInputMotorParameters() {
@@ -293,7 +193,15 @@ void updateInputMotorParameters() {
 }
 
 void rc_wirelessMessageAckReceived(wirelessMessage message, bool) {
-	//Serial.print("received ack message ");
+	// Serial.print("received message ");
+	// Serial.print(message.type);
+	// Serial.print("motor: ");
+	// Serial.print(message.motorModuleNumber);
+	// Serial.print("screen_current: ");
+	// Serial.println(menu_get_current());
+	// Serial.print("screen_display: ");
+	// Serial.println(menu_get_display());
+
 	if(message.type == MESSAGE_GET_PARAMS &&
 		menu_get_current() == MENU_GET_MOTOR_STATUS &&
 		selectedMotorNumber == message.motorModuleNumber) {
@@ -315,8 +223,7 @@ void rc_wirelessMessageAckReceived(wirelessMessage message, bool) {
 	if(message.type == MESSAGE_MOTOR_STATUS
 		&& updatingMotorStatus
 		&& selectedMotorNumber == message.motorModuleNumber
-		&& menu_get_current() == MENU_GET_MOTOR_STATUS
-		&& menu_get_display() == MENU_GET_MOTOR_STATUS) {
+		&& menu_get_current() == MENU_GET_MOTOR_STATUS) {
 
 		currentMotorStatus = message.status;
 		displayMotorStatus();
@@ -331,12 +238,23 @@ void rc_wirelessMessageAckReceived(wirelessMessage message, bool) {
 	}
 
 
-	if(message.type == MESSAGE_MOTOR_STATUS
-		&& updatingMotorStatus
-		&& menu_get_current() == MENU_ROOT
-		&& menu_get_display() == MENU_ROOT) {
+	if(
+		message.type == MESSAGE_MOTOR_STATUS && 
+		(menu_get_display() == MENU_TIMER ||
+		menu_get_display() == MENU_MANUAL)
+		) {
 
-		updateBatteryIndicator(message.status.battery, message.motorModuleNumber);
+
+		Serial.print("motor: ");
+		Serial.print(message.motorModuleNumber);
+		Serial.print("battery: ");
+		Serial.println(message.status.battery);
+		Serial.print("speed: ");
+		Serial.print(message.status.speed);
+		Serial.print(" disabled: ");
+		Serial.print(message.status.disabled);
+
+		updateBatteryIndicator(message.status.battery, message.motorModuleNumber, message.status.speed > 0, message.status.disabled);
 		// Serial.print("s: ");
 		// Serial.print(message.status.speed);
 		// Serial.print(" d: ");
@@ -769,6 +687,22 @@ void keypadListener(Key *keys, int keysLen) {
 	}
 }
 
+void get_all_motor_status() {
+
+	int all_addresses[6] = {
+		WIRELESS_MODULE_1,
+		WIRELESS_MODULE_2,
+		WIRELESS_MODULE_3,
+		WIRELESS_MODULE_4,
+		WIRELESS_MODULE_5,
+		WIRELESS_MODULE_6
+	};
+
+	wirelessMessage msg;
+	msg.type = MESSAGE_MOTOR_STATUS;
+	wireless_send_message(all_addresses, 6, msg);
+}
+
 void _setup() {
 
 	Serial.begin(9600);
@@ -794,7 +728,9 @@ void _setup() {
 	_timer_setup(timerStateChanged);
 	timer_set_run_time(savedTimerParams.runTime);
 	timer_set_stop_time(savedTimerParams.stopTime);
+	get_all_motor_status();
 }
+
 
 long displayFreeMemoryMs;
 
@@ -817,22 +753,9 @@ void _loop() {
 
 	if(menu_get_current() == MENU_ROOT && 
 		milliseconds - lastUpdateBatteryTime >= UPDATE_BATTERY_LEVEL_MS) {
-
-		int all_addresses[6] = {
-			WIRELESS_MODULE_1,
-			WIRELESS_MODULE_2,
-			WIRELESS_MODULE_3,
-			WIRELESS_MODULE_4,
-			WIRELESS_MODULE_5,
-			WIRELESS_MODULE_6
-		};
-
-		wirelessMessage msg;
-		msg.type = MESSAGE_MOTOR_STATUS;
-		wireless_send_message(all_addresses, 6, msg);
-		lastUpdateBatteryTime = milliseconds;	
+		get_all_motor_status();
+		lastUpdateBatteryTime = milliseconds;
 	}
-
 
 	// if(milliseconds - displayFreeMemoryMs >= 1000) {
 	// 	displayFreeMemoryMs = milliseconds;

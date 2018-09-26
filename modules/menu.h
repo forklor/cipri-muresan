@@ -18,6 +18,8 @@
 #define MENU_GET_MOTOR_STATUS 'A'
 
 
+void menu_set_battery_level(int level, int motorNo, bool running, bool disabled);
+
 void menu_up();
 void menu_down();
 void menu_right();
