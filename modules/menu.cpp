@@ -39,6 +39,7 @@ void menuUseEventListener(MenuUseEvent used) {
 	Serial.print(used.item.getName());
 	Serial.println(used.item.getShortkey());
 	selectedMenu = used.item.getShortkey();
+	updateDisplay();
 }
 
 long lastStepMs;
@@ -270,24 +271,28 @@ void menu_up() {
 	Serial.print("menu move up ");
 	Serial.println(menu.getCurrent().getName());
 	menu.moveUp();
+	updateDisplay();
 }
 
 void menu_down() {
 	Serial.print("menu move down ");
 	Serial.println(menu.getCurrent().getName());
 	menu.moveDown();
+	updateDisplay();
 }
 
 void menu_right() {
 	Serial.print("menu move right ");
 	Serial.println(menu.getCurrent().getName());
 	menu.moveRight();
+	updateDisplay();
 }
 
 void menu_left() {
 	Serial.print("menu move left ");
 	Serial.println(menu.getCurrent().getName());
 	menu.moveLeft();
+	updateDisplay();
 }
 
 void menu_select() {

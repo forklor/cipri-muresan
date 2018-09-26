@@ -7,5 +7,4 @@
 
 //#define MOTOR_CONTROLLER 1
 
-//#define MOTOR_MODULE_NUMBER 2
-
+//#define MOTOR_MODULE_NUMBER 1
