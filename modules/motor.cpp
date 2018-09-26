@@ -51,6 +51,8 @@ long _timeWhenTargetSpeedReached;
 
 bool _running;
 
+int batteryLevel;
+
 //Function that controls the variables: motor(0 or 1), direction (cw or ccw) and pwm (between 0 and 255);
 void motorGo( uint8_t direct, uint8_t pwm) {
 
@@ -111,6 +113,7 @@ void _motor_setup() {
 
 	_lastLoopMillis = millis();
 
+	batteryLevel = analogRead(BATTERY_PIN);
 	_running = false;
 	_currentSpeed = _targetSpeed = 0;
 	_currentDirection = _targetDirection = CW;
@@ -173,22 +176,15 @@ motorParameters motor_get_parameters() {
 
 motorStatus motor_get_status() {
 
-	int batteryValue = analogRead(BATTERY_PIN);
-
-	if(!motor_disabled &&  batteryValue <= BATTERY_LOW_VALUE) {
-		motor_stop();
-		motor_disabled = true;
-	}
-
 	Serial.print("motor status battery");
-	Serial.println(batteryValue);
+	Serial.println(batteryLevel);
 
 	motorStatus status = {
 		_currentSpeed,
 		_currentDirection,
 		analogRead(CURRENT_SEN_1),
 		analogRead(CURRENT_SEN_2),
-		batteryValue,
+		batteryLevel,
 		motor_disabled
 	};
 
@@ -236,10 +232,14 @@ void _motor_loop(long milliseconds) {
 				_directionChangeStopMillis = milliseconds;
 			}
 			if(milliseconds - _directionChangeStopMillis >= DIRECTION_CHANGE_STOP_TIME_MS) {
+
+				batteryLevel = analogRead(BATTERY_PIN);
 				_directionChangeStopMillis = 0;
 				_currentDirection = _targetDirection;
 				changed = true;
 				_directionChangeMillis = milliseconds;
+			} else {
+				batteryLevel = analogRead(BATTERY_PIN);
 			}
 		} else {
 			_currentDirection = BRAKE;
@@ -256,6 +256,11 @@ void _motor_loop(long milliseconds) {
 		Serial.println(_currentSpeed);
 
 		motorGo(_currentDirection, _currentSpeed);
+	}
+
+	if(!motor_disabled && batteryLevel <= BATTERY_LOW_VALUE) {
+		motor_stop();
+		motor_disabled = true;
 	}
 
 	// If motor is stuck when trying to go in one direction,

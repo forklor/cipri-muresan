@@ -71,31 +71,26 @@ void displayBatteryStatus(int value, int motorNo, bool running, bool disabled) {
 
 	int x = 12 + motorNo % 4 + ((int)motorNo / 4);
 	int y = motorNo / 4;
-	float voltage = ((float)value) / 1023 * 5;
+	float voltage = value;
 
-	float level1_start, level1_end,
-		level2_start, level2_end,
-		level3_start, level3_end,
-		level4_start, level4_end,
-		level5_start, level5_end,
-		level6_start, level6_end;
+	float level0 = 653, 
+		level1 = 657,
+		level2 = 668,
+		level3 = 680,
+		level4 = 692,
+		level5 = 702,
+		level6 = 709;
 
-	if(running) {
-		level1_start = 0; level1_end = 3.21;
-		level2_start = 3.21; level2_end = 3.26;
-		level3_start = 3.26; level3_end = 3.32;
-		level4_start = 3.32; level4_end = 3.38;
-		level5_start = 3.38; level5_end = 3.43;
-		level6_start = 3.43; level6_end = 3.46;
-
-	} else {
-		level1_start = 0; level1_end = 3.21;
-		level2_start = 3.21; level2_end = 3.26;
-		level3_start = 3.26; level3_end = 3.32;
-		level4_start = 3.32; level4_end = 3.38;
-		level5_start = 3.38; level5_end = 3.43;
-		level6_start = 3.43; level6_end = 3.46;
+	if(!running) {
+		level0 = 623; 
+		level1 = 627;
+		level2 = 638;
+		level3 = 650;
+		level4 = 662;
+		level5 = 672;
+		level6 = 679;
 	}
+
 
 	Serial.print("motor=");
 	Serial.print(motorNo);
@@ -116,7 +111,7 @@ void displayBatteryStatus(int value, int motorNo, bool running, bool disabled) {
 		display_lcd.createChar(motorNo - 1, batlevel);
 		display_lcd.setCursor(x, y);
 		display_lcd.write(byte(motorNo - 1));
-	} else if(voltage <= level6_end && voltage > level6_start) {
+	} else if(voltage > level5) {
 		byte batlevel[8] = {
 			B01110,
 			B11111,
@@ -130,7 +125,7 @@ void displayBatteryStatus(int value, int motorNo, bool running, bool disabled) {
 		display_lcd.createChar(motorNo - 1, batlevel);
 		display_lcd.setCursor(x, y);
 		display_lcd.write(byte(motorNo - 1));
-	 }else if(voltage <= level5_end && voltage > level5_start) {
+	 }else if(voltage <= level5 && voltage > level4) {
 		byte batlevel[8] = {
 			B01110,
 			B10001,
@@ -144,7 +139,7 @@ void displayBatteryStatus(int value, int motorNo, bool running, bool disabled) {
 		display_lcd.createChar(motorNo - 1, batlevel);
 		display_lcd.setCursor(x, y);
 		display_lcd.write(byte(motorNo - 1));
-	} else if(voltage <= level4_end && voltage > level4_start) {
+	} else if(voltage <= level4 && voltage > level3) {
 		byte batlevel[8] = {
 			B01110,
 			B10001,
@@ -158,7 +153,7 @@ void displayBatteryStatus(int value, int motorNo, bool running, bool disabled) {
 		display_lcd.createChar(motorNo - 1, batlevel);
 		display_lcd.setCursor(x, y);
 		display_lcd.write(byte(motorNo - 1));
-	} else if(voltage <= level3_end && voltage > level3_start) {
+	} else if(voltage <= level3 && voltage > level2) {
 		byte batlevel[8] = {
 			B01110,
 			B10001,
@@ -172,7 +167,7 @@ void displayBatteryStatus(int value, int motorNo, bool running, bool disabled) {
 		display_lcd.createChar(motorNo - 1, batlevel);
 		display_lcd.setCursor(x, y);
 		display_lcd.write(byte(motorNo - 1));
-	} else if(voltage <= level2_end && voltage > level2_start) {
+	} else if(voltage <= level2 && voltage > level1) {
 		byte batlevel[8] = {
 			B01110,
 			B10001,
@@ -186,7 +181,21 @@ void displayBatteryStatus(int value, int motorNo, bool running, bool disabled) {
 		display_lcd.createChar(motorNo - 1, batlevel);
 		display_lcd.setCursor(x, y);
 		display_lcd.write(byte(motorNo - 1));
-  	} else if(voltage < level1_end && voltage >= level1_start) {
+  	} else if(voltage <= level1 && voltage > level0) {
+		byte batlevel[8] = {
+			B01110,
+			B10001,
+			B10001,
+			B10001,
+			B10001,
+			B00001,
+			B11111,
+			B11111,
+		};
+		display_lcd.createChar(motorNo - 1, batlevel);
+		display_lcd.setCursor(x, y);
+		display_lcd.write(byte(motorNo - 1));
+  	} else if(voltage <= level0) {
 		byte batlevel[8] = {
 			B01110,
 			B10001,

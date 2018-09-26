@@ -59,7 +59,7 @@ void displayMotorStatus() {
 	display_lcd.setCursor(0, 1);
 	display_lcd.print("B=");
 	display_lcd.setCursor(2, 1);
-	display_lcd.print(currentMotorStatus.battery);
+	display_lcd.print(((float)currentMotorStatus.battery/55.35));
 	display_lcd.setCursor(9, 1);
 	display_lcd.print("C=");
 	display_lcd.setCursor(11, 1);
