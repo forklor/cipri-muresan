@@ -25,29 +25,31 @@ wirelessMessage m_wirelessMessageReceived(wirelessMessage message) {
 
 	switch (message.type) {
 		case MESSAGE_TOGGLE_START_STOP:
-			motor_toggle_start_stop();
+			if(!motor_is_disabled()) motor_toggle_start_stop();
 			break;
 		case MESSAGE_SET_PARAMS:
-			Serial.print(F("speed:"));
-			Serial.print(message.parameters.maxSpeed);
-			Serial.print(F("acc:"));
-			Serial.print(message.parameters.acceleration);
-			Serial.print(F("decc:"));
-			Serial.println(message.parameters.decelerationPercentage);
-			motor_set_parameters(message.parameters);
-			saveMotorParameters(message.parameters);
+			if(!motor_is_disabled()) {
+				Serial.print(F("speed:"));
+				Serial.print(message.parameters.maxSpeed);
+				Serial.print(F("acc:"));
+				Serial.print(message.parameters.acceleration);
+				Serial.print(F("decc:"));
+				Serial.println(message.parameters.decelerationPercentage);
+				motor_set_parameters(message.parameters);
+				saveMotorParameters(message.parameters);
+			}
 			break;
 		case MESSAGE_GET_PARAMS:
 			message.parameters = motor_get_parameters();
 			break;
 		case MESSAGE_CHANGE_DIRECTION: 
-			motor_switch_direction();
+			if(!motor_is_disabled()) motor_switch_direction();
 			break;
 		case MESSAGE_START:
-			motor_start();
+			if(!motor_is_disabled()) motor_start();
 			break;
 		case MESSAGE_STOP:
-			motor_stop();
+			if(!motor_is_disabled()) motor_stop();
 			break;
 		case MESSAGE_MOTOR_STATUS:
 			message.status = motor_get_status();

@@ -15,6 +15,7 @@ struct motorStatus {
 	int cs1;
 	int cs2;
 	int battery;
+	bool disabled;
 };
 
 void _motor_setup();
@@ -28,5 +29,7 @@ void motor_switch_direction();
 void motor_set_parameters(motorParameters params);
 motorParameters motor_get_parameters();
 motorStatus motor_get_status();
+
+bool motor_is_disabled();
 
 #endif // MOTOR_H_

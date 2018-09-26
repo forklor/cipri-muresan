@@ -34,12 +34,15 @@
 #define DIRECTION_CHANGE_STOP_TIME_MS 0 // how much to wait after speed gets to 0 before changing direction
 #define TIME_TO_WAIT_BEFORE_READING_CS_VALUE_MS 1000 // how much time to wait before reaching top speed before compare CS value to csThreshold
 
+#define BATTERY_LOW_VALUE 600
+
 motorParameters settings;
 
 int _currentSpeed;
 volatile int _currentDirection;
 int _targetSpeed;
 volatile int _targetDirection;
+bool motor_disabled;
 
 long _lastLoopMillis;
 long _directionChangeStopMillis;
@@ -82,6 +85,8 @@ void interrupt_listener() {
 }
 
 void _motor_setup() {
+
+	motor_disabled = false;
 
 	pinMode(MOTOR_A1_PIN, OUTPUT);
 	pinMode(MOTOR_B1_PIN, OUTPUT);
@@ -167,15 +172,31 @@ motorParameters motor_get_parameters() {
 }
 
 motorStatus motor_get_status() {
+
+	int batteryValue = analogRead(BATTERY_PIN);
+
+	if(!motor_disabled &&  batteryValue <= BATTERY_LOW_VALUE) {
+		motor_stop();
+		motor_disabled = true;
+	}
+
+	Serial.print("motor status battery");
+	Serial.println(batteryValue);
+
 	motorStatus status = {
 		_currentSpeed,
 		_currentDirection,
 		analogRead(CURRENT_SEN_1),
 		analogRead(CURRENT_SEN_2),
-		analogRead(BATTERY_PIN)
+		batteryValue,
+		motor_disabled
 	};
 
 	return status;
+}
+
+bool motor_is_disabled() {
+	return motor_disabled;
 }
 
 void _motor_loop(long milliseconds) {
@@ -243,8 +264,8 @@ void _motor_loop(long milliseconds) {
 		_currentSpeed > 0 && 
 		_timeWhenTargetSpeedReached > 0 &&
 		milliseconds - _timeWhenTargetSpeedReached > TIME_TO_WAIT_BEFORE_READING_CS_VALUE_MS &&
-		(analogRead(CURRENT_SEN_1)  > settings.csThreshold) || 
-		(analogRead(CURRENT_SEN_2)  > settings.csThreshold)
+		((analogRead(CURRENT_SEN_1)  > settings.csThreshold) || 
+		(analogRead(CURRENT_SEN_2)  > settings.csThreshold))
 	) {
 		motor_switch_direction();
 		return;
