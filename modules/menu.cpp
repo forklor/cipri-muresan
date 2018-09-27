@@ -105,7 +105,21 @@ void displayBatteryStatus(int value, int motorNo, bool running, bool disabled, b
 	Serial.print(" voltage=");
 	Serial.println(voltage);
 
-	if(disabled) {
+	if(!reachable) {
+		byte batlevel[8] = {
+			B10001,
+			B01010,
+			B01010,
+			B00100,
+			B00100,
+			B01010,
+			B01010,
+			B10001,
+		};
+		display_lcd.createChar(motorNo - 1, batlevel);
+		display_lcd.setCursor(x, y);
+		display_lcd.write(byte(motorNo - 1));
+	} else if(disabled) {
 		byte batlevel[8] = {
 			B01110,
 			B11111,
