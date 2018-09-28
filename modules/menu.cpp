@@ -62,7 +62,7 @@ void menuChangeEventListener(MenuChangeEvent changed) {
 
 MenuBackend menu = MenuBackend(menuUseEventListener, menuChangeEventListener);
 
-MenuItem mainTimer = MenuItem("Auto Timer", MENU_TIMER);
+MenuItem mainTimer = MenuItem("AutoTimer", MENU_TIMER);
 MenuItem mainManual = MenuItem("Manual", MENU_MANUAL);
 
 MenuItem manualRunTime = MenuItem("R", MENU_MANUAL_SET_RUN_TIME);
@@ -100,26 +100,28 @@ void displayBatteryStatus(int value, int motorNo, bool running, bool disabled, b
 	}
 
 
-	Serial.print("motor=");
-	Serial.print(motorNo);
-	Serial.print(" voltage=");
-	Serial.println(voltage);
+	//Serial.print("motor=");
+	//Serial.print(motorNo);
+	//Serial.print(" voltage=");
+	//Serial.println(voltage);
 
-	if(!reachable) {
-		byte batlevel[8] = {
-			B10001,
-			B01010,
-			B01010,
-			B00100,
-			B00100,
-			B01010,
-			B01010,
-			B10001,
-		};
-		display_lcd.createChar(motorNo - 1, batlevel);
-		display_lcd.setCursor(x, y);
-		display_lcd.write(byte(motorNo - 1));
-	} else if(disabled) {
+	// if(!reachable) {
+	// 	byte batlevel[8] = {
+	// 		B10001,
+	// 		B01010,
+	// 		B01010,
+	// 		B00100,
+	// 		B00100,
+	// 		B01010,
+	// 		B01010,
+	// 		B10001,
+	// 	};
+	// 	display_lcd.createChar(motorNo - 1, batlevel);
+	// 	display_lcd.setCursor(x, y);
+	// 	display_lcd.write(byte(motorNo - 1));
+	// } else
+
+	 if(disabled) {
 		byte batlevel[8] = {
 			B01110,
 			B11111,
@@ -275,7 +277,7 @@ void updateDisplay() {
 		display_lcd.setCursor(0, 1);
 		char *displayMenuName = (char *)menu.getCurrent().getName();
 		char *display = (char *)malloc((strlen(displayMenuName) + 4) * sizeof(char));
-		sprintf(display, "%s %s", displayMenuName, timer_is_running() ? " ON " : " OFF");
+		sprintf(display, "%s %s", displayMenuName, timer_is_running() ? "ON" : "OFF");
 		display_lcd.print(display);
 		free(display);
 
@@ -386,31 +388,37 @@ void menu_set_battery_level(int level, int motorNo, bool running, bool disabled,
 			bat1 = level;
 			motor1_running = running;
 			motor1_disabled = disabled;
+			motor1_reachable = reachable;
 			break;
 		case 2:
 			bat2 = level;
-			motor1_running = running;
-			motor1_disabled = disabled;
+			motor2_running = running;
+			motor2_disabled = disabled;
+			motor2_reachable = reachable;
 			break;
 		case 3:
 			bat3 = level;
-			motor2_running = running;
-			motor2_disabled = disabled;
+			motor3_running = running;
+			motor3_disabled = disabled;
+			motor3_reachable = reachable;
 			break;
 		case 4:
 			bat4 = level;
-			motor3_running = running;
-			motor3_disabled = disabled;
+			motor4_running = running;
+			motor4_disabled = disabled;
+			motor4_reachable = reachable;
 			break;
 		case 5:
 			bat5 = level;
-			motor3_running = running;
-			motor3_disabled = disabled;
+			motor5_running = running;
+			motor5_disabled = disabled;
+			motor5_reachable = reachable;
 			break;
 		case 6:
 			bat6 = level;
-			motor3_running = running;
-			motor3_disabled = disabled;
+			motor6_running = running;
+			motor6_disabled = disabled;
+			motor6_reachable = reachable;
 			break;
 		default:
 			break;

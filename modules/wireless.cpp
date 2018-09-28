@@ -4,14 +4,14 @@
 
 #include "wireless.h"
 
-#define ACK_TIMEOUT_MS 200
+#define ACK_TIMEOUT_MS 500
 
 byte wireless_addresses[][6] = {"1Node", "2Node", "3Node", "4Node", "5Node", "6Node", "7Node"};
 
 RF24 *radio;
 
 void (*_w_ack_listener)(wirelessMessage);
-void (*_w_send_timeout_listener)(wirelessMessage);
+void (*_w_send_timeout_listener)(int, wirelessMessage);
 wirelessMessage (*_w_listener)(wirelessMessage);
 
 bool listening;
@@ -40,13 +40,32 @@ void _wireless_setup(int pinA, int pinB, int address) {
 	radio = new RF24(pinA, pinB);
 
 	radio->begin();
-	radio->setPALevel(RF24_PA_HIGH);
-	//radio->setChannel(76);
+	radio->setPALevel(RF24_PA_MAX);
+	radio->setDataRate(RF24_250KBPS);
+	radio->setChannel(108);
 	radio->enableAckPayload();
 	radio->enableDynamicPayloads();
 	//radio->printDetails();
+	radio->setRetries(1, 15);
 }
 
+
+void _wireless_send_message(int targetAddress, wirelessMessage msg) {
+
+	Serial.print(F("send message from "));
+	Serial.print(localAddress);
+	Serial.print(F(" to "));
+	Serial.println(targetAddress);
+	__targetAddress = targetAddress;
+
+	radio->openWritingPipe(wireless_addresses[targetAddress]); // module_x
+	radio->openReadingPipe(1, wireless_addresses[localAddress]); // remote control
+
+	radio->startListening();
+
+	sendMessage = true;
+	messageToSend = msg;
+}
 
 void checkIfMultipleMessages() {
 
@@ -56,9 +75,9 @@ void checkIfMultipleMessages() {
 	
 	if(targetAddressIndex < targetAddressesLen) {
 		//Serial.print(F("send message to index "));
-		wireless_send_message(targetAddresses[targetAddressIndex], messageToSend);
+		_wireless_send_message(targetAddresses[targetAddressIndex], messageToSend);
 	} else {
-		Serial.println(F("finished sending message to multiple targets"));
+		//Serial.println(F("finished sending message to multiple targets"));
 		targetAddressIndex = -1;
 		sendMesssageMultiple = false;
 		free(targetAddresses);
@@ -92,7 +111,7 @@ void _wireless_loop(long milliseconds) {
 		if (timeout) {
 			Serial.println(F("Failed, response timed out."));
 			if(_w_send_timeout_listener != NULL) {
-				_w_send_timeout_listener(messageToSend);
+				_w_send_timeout_listener(__targetAddress, messageToSend);
 			}
 			radio->stopListening();
 			waitingForAck = false;
@@ -108,8 +127,8 @@ void _wireless_loop(long milliseconds) {
 				waitingForAck = false;
 			}
 			if(!waitingForAck) {
-				Serial.print(F("received ack"));
-				Serial.println(__targetAddress);
+				//Serial.print(F("received ack"));
+				//Serial.println(__targetAddress);
 				checkIfMultipleMessages();
 			}
 		}
@@ -127,25 +146,23 @@ void _wireless_loop(long milliseconds) {
 	}
 }
 
-
 void wireless_send_message(int targetAddress, wirelessMessage msg) {
+	
+	listening = false;
+	waitingForAck = false;
+	sendMessage = false;
 
-	Serial.print(F("send message from "));
-	Serial.print(localAddress);
-	Serial.print(F(" to "));
-	Serial.println(targetAddress);
-	__targetAddress = targetAddress;
+	targetAddressIndex = -1;
+	sendMesssageMultiple = false;
 
-	radio->openWritingPipe(wireless_addresses[targetAddress]); // module_x
-	radio->openReadingPipe(1, wireless_addresses[localAddress]); // remote control
-
-	radio->startListening();
-
-	sendMessage = true;
-	messageToSend = msg;
+	_wireless_send_message(targetAddress, msg);	
 }
 
 void wireless_send_message(int *targets, int targets_len, wirelessMessage msg) {
+
+	listening = false;
+	waitingForAck = false;
+	sendMessage = false;
 
 	targetAddresses = (int *)malloc(targets_len * sizeof(*targetAddresses));
 	memcpy(targetAddresses, targets, targets_len * sizeof(*targetAddresses));
@@ -154,15 +171,16 @@ void wireless_send_message(int *targets, int targets_len, wirelessMessage msg) {
 	targetAddressIndex = 0;
 	targetAddressesLen = targets_len;
 
-	wireless_send_message(targetAddresses[targetAddressIndex], msg);
+	_wireless_send_message(targetAddresses[targetAddressIndex], msg);
 }
+
 
 
 void wireless_listen_ack(void (*f)(wirelessMessage)) {
 	_w_ack_listener = f;
 }
 
-void wireless_listen_send_timeout(void (*f)(wirelessMessage)) {
+void wireless_listen_send_timeout(void (*f)(int, wirelessMessage)) {
 	_w_send_timeout_listener = f;
 }
 

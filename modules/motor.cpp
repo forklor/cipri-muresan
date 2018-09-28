@@ -32,9 +32,9 @@
 
 #define SPEED_CHANGE_STEP_MS 50 // how often to update motor speed
 #define DIRECTION_CHANGE_STOP_TIME_MS 0 // how much to wait after speed gets to 0 before changing direction
-#define TIME_TO_WAIT_BEFORE_READING_CS_VALUE_MS 1000 // how much time to wait before reaching top speed before compare CS value to csThreshold
+#define TIME_TO_WAIT_BEFORE_READING_CS_VALUE_MS 350 // how much time to wait before reaching top speed before compare CS value to csThreshold
 
-#define BATTERY_LOW_VALUE 600
+#define BATTERY_LOW_VALUE 535
 
 motorParameters settings;
 
@@ -221,6 +221,9 @@ void _motor_loop(long milliseconds) {
 				_timeWhenTargetSpeedReached = 0;
 				Serial.println(F("Changing direction, time passed"));
 				motor_switch_direction();
+			}
+			if(_targetSpeed == 0) {
+				batteryLevel = analogRead(BATTERY_PIN);
 			}
 		}
 	} else {

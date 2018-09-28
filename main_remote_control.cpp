@@ -14,7 +14,7 @@
 #include "modules/timer.h"
 #include "modules/MemoryFree.h"
 
-#define UPDATE_MOTOR_STATUS_MS 800
+#define UPDATE_MOTOR_STATUS_MS 1200
 
 #define UPDATE_BATTERY_LEVEL_MS 10000
 
@@ -23,8 +23,7 @@ struct timerParameters {
 	long stopTime;
 };
 
-void timerStateChanged(bool running) {
-	int all_addresses[6] = {
+int _all_addresses[6] = {
 		WIRELESS_MODULE_1,
 		WIRELESS_MODULE_2,
 		WIRELESS_MODULE_3,
@@ -33,17 +32,21 @@ void timerStateChanged(bool running) {
 		WIRELESS_MODULE_6
 	};
 
+wirelessMessage statusMsg;
+
+void timerStateChanged(bool running) {
+
 	wirelessMessage msg;
 	msg.type = running ? MESSAGE_START : MESSAGE_STOP;
-	wireless_send_message(all_addresses, 6, msg);
+	wireless_send_message(_all_addresses, 6, msg);
 }
 
 motorStatus currentMotorStatus;
-bool updatingMotorStatus;
 long lastUpdateStatusTime;
 long lastUpdateBatteryTime;
 motorParameters settingParameters;
 int selectedMotorNumber;
+bool updatingMotorStatus = false;
 
 void displayMotorStatus() {
 	updatingMotorStatus = true;
@@ -157,7 +160,6 @@ void updateBatteryIndicator(int value,  int motorNo, bool running, bool disabled
 }
 
 void updateInputMotorParameters() {
-
 	if(menu_get_current() == MENU_GET_MOTOR_STATUS) {
 		char displayMenu = menu_get_display();
 		char displayName[16] = "";
@@ -192,7 +194,7 @@ void updateInputMotorParameters() {
 	}
 }
 
-void rc_wirelessMessageTimeout(wirelessMessage message) {
+void rc_wirelessMessageTimeout(int targetAddress, wirelessMessage message) {
 	if(
 		message.type == MESSAGE_MOTOR_STATUS && 
 		(
@@ -200,8 +202,9 @@ void rc_wirelessMessageTimeout(wirelessMessage message) {
 			menu_get_display() == MENU_MANUAL
 		)
 	) {
-
-		updateBatteryIndicator(0, message.motorModuleNumber, false, false, false);
+		//Serial.print("Timeout");
+		//Serial.println(targetAddress);
+		//updateBatteryIndicator(0, targetAddress, false, false, false);
 	}
 }
 
@@ -260,12 +263,12 @@ void rc_wirelessMessageAckReceived(wirelessMessage message) {
 
 		Serial.print("motor: ");
 		Serial.print(message.motorModuleNumber);
-		Serial.print("battery: ");
-		Serial.println(message.status.battery);
-		Serial.print("speed: ");
+		Serial.print(" battery: ");
+		Serial.print(message.status.battery);
+		Serial.print(" speed: ");
 		Serial.print(message.status.speed);
 		Serial.print(" disabled: ");
-		Serial.print(message.status.disabled);
+		Serial.println(message.status.disabled);
 
 		updateBatteryIndicator(message.status.battery, message.motorModuleNumber, message.status.speed > 0, message.status.disabled, true);
 		// Serial.print("s: ");
@@ -435,15 +438,6 @@ void start_stop_all_pressed() {
 		return;
 	}
 
-	int all_addresses[6] = {
-		WIRELESS_MODULE_1,
-		WIRELESS_MODULE_2,
-		WIRELESS_MODULE_3,
-		WIRELESS_MODULE_4,
-		WIRELESS_MODULE_5,
-		WIRELESS_MODULE_6
-	};
-
 	wirelessMessage msg;
 	bool validCommand = false;
 	char displayMenu = menu_get_display();
@@ -479,7 +473,7 @@ void start_stop_all_pressed() {
 		}
 	}
 
-	if(validCommand) wireless_send_message(all_addresses, 6, msg);
+	if(validCommand) wireless_send_message(_all_addresses, 6, msg);
 }
 
 
@@ -702,18 +696,9 @@ void keypadListener(Key *keys, int keysLen) {
 
 void get_all_motor_status() {
 
-	int all_addresses[6] = {
-		WIRELESS_MODULE_1,
-		WIRELESS_MODULE_2,
-		WIRELESS_MODULE_3,
-		WIRELESS_MODULE_4,
-		WIRELESS_MODULE_5,
-		WIRELESS_MODULE_6
-	};
-
-	wirelessMessage msg;
-	msg.type = MESSAGE_MOTOR_STATUS;
-	wireless_send_message(all_addresses, 6, msg);
+	//Serial.println("get all motor status");
+	
+	wireless_send_message(_all_addresses, 6, statusMsg);
 }
 
 void _setup() {
@@ -726,6 +711,8 @@ void _setup() {
 	_keypad_setup(keypadListener);
 	_display_setup();
 	_menu_setup();
+
+	statusMsg.type = MESSAGE_MOTOR_STATUS;
 
 	lastUpdateBatteryTime = 0;
 	timerParameters savedTimerParams;
@@ -759,13 +746,11 @@ void _loop() {
 	if(updatingMotorStatus &&
 		milliseconds - lastUpdateStatusTime >= UPDATE_MOTOR_STATUS_MS) {
 
-		wirelessMessage msg;
-		msg.type = MESSAGE_MOTOR_STATUS;
-		wireless_send_message(selectedMotorNumber, msg);
+		wireless_send_message(selectedMotorNumber, statusMsg);
 		lastUpdateStatusTime = milliseconds;
 	}
 
-	if(menu_get_current() == MENU_ROOT && 
+	if((menu_get_display() == MENU_MANUAL || menu_get_display() == MENU_TIMER) && 
 		milliseconds - lastUpdateBatteryTime >= UPDATE_BATTERY_LEVEL_MS) {
 		get_all_motor_status();
 		lastUpdateBatteryTime = milliseconds;
@@ -773,8 +758,8 @@ void _loop() {
 
 	// if(milliseconds - displayFreeMemoryMs >= 1000) {
 	// 	displayFreeMemoryMs = milliseconds;
-	// 	// Serial.print("freeMemory()=");
-	// 	//Serial.println(freeMemory());
+	// 	Serial.print("freeMemory()=");
+	// 	Serial.println(freeMemory());
 	// }
 }
 
