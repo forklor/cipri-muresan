@@ -81,22 +81,22 @@ void displayBatteryStatus(int value, int motorNo, bool running, bool disabled, b
 	int y = motorNo / 4;
 	float voltage = value;
 
-	float level0 = 653, 
-		level1 = 657,
-		level2 = 668,
-		level3 = 680,
-		level4 = 692,
-		level5 = 702,
-		level6 = 709;
+	float level0 = 650, 
+		level1 = 658,
+		level2 = 666,
+		level3 = 674,
+		level4 = 682,
+		level5 = 690,
+		level6 = 700;
 
-	if(!running) {
-		level0 = 623; 
-		level1 = 627;
-		level2 = 638;
-		level3 = 650;
-		level4 = 662;
-		level5 = 672;
-		level6 = 679;
+	if(running) {
+		level0 = 535;
+		level1 = 559;
+		level2 = 584;
+		level3 = 609;
+		level4 = 634;
+		level5 = 659;
+		level6 = 684;
 	}
 
 
