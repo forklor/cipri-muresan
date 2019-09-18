@@ -4,7 +4,8 @@
 
 #include "wireless.h"
 
-#define ACK_TIMEOUT_MS 500
+#define ACK_TIMEOUT_MS 1000
+#define FAIL_RETRIES_MAX 5
 
 byte wireless_addresses[][6] = {"1Node", "2Node", "3Node", "4Node", "5Node", "6Node", "7Node"};
 
@@ -26,6 +27,7 @@ wirelessMessage messageToSend;
 int *targetAddresses;
 int targetAddressesLen;
 int targetAddressIndex;
+int failRetries;
 bool sendMesssageMultiple;
 
 int __targetAddress = 0;
@@ -46,7 +48,7 @@ void _wireless_setup(int pinA, int pinB, int address) {
 	radio->enableAckPayload();
 	radio->enableDynamicPayloads();
 	//radio->printDetails();
-	radio->setRetries(1, 15);
+	radio->setRetries(15, 15);
 }
 
 
@@ -67,11 +69,16 @@ void _wireless_send_message(int targetAddress, wirelessMessage msg) {
 	messageToSend = msg;
 }
 
-void checkIfMultipleMessages() {
+void checkIfMultipleMessages(bool failed) {
 
 	if(!sendMesssageMultiple) return;
 	
-	targetAddressIndex += 1;
+	if(failed && failRetries <= FAIL_RETRIES_MAX) {
+		failRetries += 1;
+	} else {
+		failRetries = 0;
+		targetAddressIndex += 1;
+	}
 	
 	if(targetAddressIndex < targetAddressesLen) {
 		//Serial.print(F("send message to index "));
@@ -115,7 +122,7 @@ void _wireless_loop(long milliseconds) {
 			}
 			radio->stopListening();
 			waitingForAck = false;
-			checkIfMultipleMessages();
+			checkIfMultipleMessages(true);
 		} else {
 			wirelessMessage ackMessage;
 			while(radio->available()) {
@@ -129,7 +136,7 @@ void _wireless_loop(long milliseconds) {
 			if(!waitingForAck) {
 				//Serial.print(F("received ack"));
 				//Serial.println(__targetAddress);
-				checkIfMultipleMessages();
+				checkIfMultipleMessages(false);
 			}
 		}
 	} else if(sendMessage) {
@@ -137,12 +144,14 @@ void _wireless_loop(long milliseconds) {
 		radio->stopListening();
 		if (!radio->write(&messageToSend, sizeof(messageToSend))) {
 			Serial.println(F("Failed writing"));
-		} 
-
-		waitingForAck = true;
-		startWaitingForAckTime = millis();
-		radio->startListening();
-		sendMessage = false;
+			radio->startListening();
+			checkIfMultipleMessages(true);
+		} else {
+			waitingForAck = true;
+			startWaitingForAckTime = millis();
+			radio->startListening();
+			sendMessage = false;
+		}
 	}
 }
 
@@ -153,6 +162,7 @@ void wireless_send_message(int targetAddress, wirelessMessage msg) {
 	sendMessage = false;
 
 	targetAddressIndex = -1;
+	failRetries = 0;
 	sendMesssageMultiple = false;
 
 	_wireless_send_message(targetAddress, msg);	
@@ -169,6 +179,7 @@ void wireless_send_message(int *targets, int targets_len, wirelessMessage msg) {
 
 	sendMesssageMultiple = true;
 	targetAddressIndex = 0;
+	failRetries = 0;
 	targetAddressesLen = targets_len;
 
 	_wireless_send_message(targetAddresses[targetAddressIndex], msg);
