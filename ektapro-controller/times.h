@@ -11,6 +11,8 @@ int VIEW_TIME_ONE = 2000;
 
 int CLOSE_TIME = 200;
 
+int STOP_BEFORE_LOOP_TIME = 10000;
+
 int TIMES[][ENTRY_SIZE] = {
 
 		{ 7, 3030, 3970, 5540 },

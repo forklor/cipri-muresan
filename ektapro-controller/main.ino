@@ -17,6 +17,7 @@
 #define STATE_INIT 7
 #define STATE_PRE_INIT 9
 #define STATE_CLOSING_ALL_END 10
+#define STATE_STOPPED_LOOP 11
 
 #define PRE_INIT_TIME 500
 #define INIT_TIME 3000
@@ -76,6 +77,9 @@ void print_state_name(int state) {
 
 		case STATE_PRE_INIT:
 			name = (char *)"pre init";
+		break;
+		case STATE_STOPPED_LOOP:
+			name = (char *)"stop loop";
 		break;
 	}
 
@@ -197,6 +201,12 @@ void enter_state(int state) {
 			current_step = -1;
 			break;
 
+		case STATE_STOPPED_LOOP:
+			projectors_send_command_all(SET_RESET_MODE, SET_RESET_CMD_STANDBY, true);
+			chrono.restart();
+			current_step = -1;
+			break;
+
 		case STATE_PRE_INIT:
 			current_step = -1;
 			projectors_send_command_all(SET_RESET_MODE, SET_RESET_CMD_STANDBY, true);
@@ -263,7 +273,7 @@ void loop() {
 			Serial.println("Button pressed");
 		#endif
 
-			if(current_state == STATE_STOPPED) {
+			if(current_state == STATE_STOPPED || current_state == STATE_STOPPED_LOOP) {
 				set_state(STATE_PRE_INIT);
 			} else  {
 				if(chrono.isRunning()) {
@@ -324,7 +334,7 @@ void loop() {
 		case STATE_CLOSING_ALL_END:
 			if(chrono.hasPassed(CLOSE_TIME)) {
 				chrono.stop();
-				set_state(STATE_STOPPED);
+				set_state(STATE_STOPPED_LOOP);
 			}
 
 		case STATE_PRE_INIT:
@@ -338,6 +348,13 @@ void loop() {
 			if(chrono.hasPassed(INIT_TIME)) {
 				chrono.stop();
 				set_state(STATE_CHANGING);
+			}
+			break;
+
+		case STATE_STOPPED_LOOP:
+			if(chrono.hasPassed(STOP_BEFORE_LOOP_TIME)) {
+				chrono.restart();
+				set_state(STATE_PRE_INIT);
 			}
 			break;
 
