@@ -23,6 +23,8 @@
 #define INIT_TIME 3000
 #define CLOSE_TIME_END 3000
 
+#define IGNORE_SENSOR_ON_STOP_TIME_PASSED_MS 60000
+
 //#define DEBUG
 
 int current_state;
@@ -31,8 +33,11 @@ int max_steps;
 int current_projector;
 int view_all_time;
 
+int closed_all_end;
+
 Chrono chrono;
 Chrono btn_chrono;
+Chrono ignore_sensor_chrono;
 
 int prev_btn_state;
 
@@ -190,7 +195,9 @@ void enter_state(int state) {
 			break;
 
 		case STATE_CLOSING_ALL_END:
+			closed_all_end = 1;
 			chrono.restart();
+			ignore_sensor_chrono.restart();
 			projectors_send_command_all(DIRECT_MODE, DIRECT_MODE_SHUTTER_CLOSE);
 			projectors_send_command_all(PARAMETER_MODE, PARAMETER_CMD_RANDOM_ACCESS, TIMES[0][0]);
 			break;
@@ -208,6 +215,7 @@ void enter_state(int state) {
 			break;
 
 		case STATE_PRE_INIT:
+			closed_all_end = 0;
 			current_step = -1;
 			projectors_send_command_all(SET_RESET_MODE, SET_RESET_CMD_STANDBY, true);
 			projectors_send_command_all(SET_RESET_MODE, SET_RESET_CMD_AUTOSHUTTER, false);
@@ -240,6 +248,7 @@ void setup() {
 	Serial.begin(9600);
 
 	current_state = 0;
+	closed_all_end = 0;
 	max_steps = sizeof(TIMES) / (sizeof(int) * ENTRY_SIZE);
 	projectors_init();
 
@@ -263,7 +272,15 @@ void setup() {
 void loop() {
 
 	int new_btn_state = digitalRead(BUTTON_PIN);
-	if(prev_btn_state != new_btn_state) {
+	
+	if(
+		(
+			!closed_all_end || 
+			(closed_all_end && ignore_sensor_chrono.hasPassed(IGNORE_SENSOR_ON_STOP_TIME_PASSED_MS))
+		) && 
+		prev_btn_state != new_btn_state
+	  ) {
+
 		prev_btn_state = new_btn_state;
 
 		if(btn_chrono.hasPassed(BUTTON_DEBOUNCE_MS)) {
@@ -273,15 +290,22 @@ void loop() {
 			Serial.println("Button pressed");
 		#endif
 
-			if(current_state == STATE_STOPPED || current_state == STATE_STOPPED_LOOP) {
-				set_state(STATE_PRE_INIT);
-			} else  {
+			if(new_btn_state == HIGH) {
+
 				if(chrono.isRunning()) {
+					projectors_send_command_all(SET_RESET_MODE, SET_RESET_CMD_STANDBY, true);
 					chrono.stop();
-				} else {
+				}
+
+			} else if(new_btn_state == LOW) {
+
+				if(current_state == STATE_STOPPED || current_state == STATE_STOPPED_LOOP) {
+					set_state(STATE_PRE_INIT);
+				} else if(!chrono.isRunning()) {
 					projectors_send_command_all(SET_RESET_MODE, SET_RESET_CMD_STANDBY, false);
 					chrono.restart();
 				}
+
 			}
 		}
 	}
