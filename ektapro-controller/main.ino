@@ -358,7 +358,7 @@ void loop() {
 		case STATE_CLOSING_ALL_END:
 			if(chrono.hasPassed(CLOSE_TIME)) {
 				chrono.stop();
-				set_state(STATE_STOPPED_LOOP);
+				set_state(STATE_STOPPED);
 			}
 
 		case STATE_PRE_INIT:
