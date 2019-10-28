@@ -281,8 +281,6 @@ void loop() {
 		prev_btn_state != new_btn_state
 	  ) {
 
-		prev_btn_state = new_btn_state;
-
 		if(btn_chrono.hasPassed(BUTTON_DEBOUNCE_MS)) {
 			btn_chrono.restart();
 
@@ -292,12 +290,17 @@ void loop() {
 
 			if(new_btn_state == HIGH) {
 
-				if(chrono.isRunning()) {
-					projectors_send_command_all(SET_RESET_MODE, SET_RESET_CMD_STANDBY, true);
-					chrono.stop();
-				}
+				// if(chrono.isRunning()) {
+				// 	projectors_send_command_all(SET_RESET_MODE, SET_RESET_CMD_STANDBY, true);
+				// 	chrono.stop();
+				// }
+				#ifdef DEBUG
+					Serial.println("Sensor off, just continue current state");
+				#endif
 
 			} else if(new_btn_state == LOW) {
+
+				prev_btn_state = new_btn_state;
 
 				if(current_state == STATE_STOPPED || current_state == STATE_STOPPED_LOOP) {
 					set_state(STATE_PRE_INIT);
@@ -305,7 +308,6 @@ void loop() {
 					projectors_send_command_all(SET_RESET_MODE, SET_RESET_CMD_STANDBY, false);
 					chrono.restart();
 				}
-
 			}
 		}
 	}
