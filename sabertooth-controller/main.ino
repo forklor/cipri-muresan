@@ -88,7 +88,7 @@ int sign(int val) {
 
 
 int _button_pause = -1;
-long _read_button_pause_ms = 0;
+long _read_button_pause_ms = -10000;
 void read_pause_button() {
 
 	int changed = 0;
@@ -127,7 +127,7 @@ void read_pause_button() {
 
 
 int _button_start = 0;
-long _read_button_start_ms = 0;
+long _read_button_start_ms = -1000;
 void read_start_button() {
 
 	int val = digitalRead(BUTTON_START);
@@ -171,7 +171,7 @@ void read_stop_button() {
 
 
 int _button_toggle_direction = 0;
-long _read_button_toggle_ms = 0;
+long _read_button_toggle_ms = -1000;
 void read_toggle_direction_button() {
 
 	int val = digitalRead(BUTTON_CHANGE_DIRECTION);
