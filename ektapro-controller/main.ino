@@ -277,8 +277,7 @@ void loop() {
 		(
 			!closed_all_end || 
 			(closed_all_end && ignore_sensor_chrono.hasPassed(IGNORE_SENSOR_ON_STOP_TIME_PASSED_MS))
-		) && 
-		prev_btn_state != new_btn_state
+		) 
 	  ) {
 
 		if(btn_chrono.hasPassed(BUTTON_DEBOUNCE_MS)) {
@@ -300,14 +299,14 @@ void loop() {
 
 			} else if(new_btn_state == LOW) {
 
-				prev_btn_state = new_btn_state;
 
 				if(current_state == STATE_STOPPED || current_state == STATE_STOPPED_LOOP) {
 					set_state(STATE_PRE_INIT);
-				} else if(!chrono.isRunning()) {
-					projectors_send_command_all(SET_RESET_MODE, SET_RESET_CMD_STANDBY, false);
-					chrono.restart();
 				}
+				// else if(!chrono.isRunning()) {
+				// 	projectors_send_command_all(SET_RESET_MODE, SET_RESET_CMD_STANDBY, false);
+				// 	chrono.restart();
+				// }
 			}
 		}
 	}
