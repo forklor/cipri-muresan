@@ -1,8 +1,8 @@
 
 #define CONTROLLER_A1 3
-#define CONTROLLER_A2 4
+#define CONTROLLER_A2 5
 
-#define CONTROLLER_S1 5
+#define CONTROLLER_S1 6
 
 #define SWITCH_1 7
 #define SWITCH_2 8
@@ -341,7 +341,7 @@ void setup() {
 
 	pinMode(BUTTON_START, INPUT);
 	pinMode(BUTTON_STOP, INPUT);
-	pinMode(BUTTON_PAUSE, INPUT_PULLUP);
+	pinMode(BUTTON_PAUSE, INPUT);
 	pinMode(BUTTON_CHANGE_DIRECTION, INPUT);
 
 	_switch_1_value = digitalRead(SWITCH_1);
