@@ -70,7 +70,7 @@ void read_knob_value() {
 	int new_knob_val = analogRead(KNOB);
 
 	if(
-		abs(new_knob_val - _knob_value) > 50 || 
+		abs(new_knob_val - _knob_value) >= 100 || 
 		(new_knob_val == 0 && _knob_value != 0) ||
 		(new_knob_val == 1023 && _knob_value != 1023)
 		) {
@@ -87,7 +87,7 @@ int sign(int val) {
 }
 
 
-int _button_pause = -1;
+int _button_pause = -123;
 long _read_button_pause_ms = -10000;
 void read_pause_button() {
 
@@ -95,7 +95,6 @@ void read_pause_button() {
 	int val = digitalRead(BUTTON_PAUSE);
 	
 	if(val != _button_pause) {
-		_button_pause = val;
 		changed = 1;
 		Serial.print(F("Pause button changed "));
 		Serial.println(val);
@@ -104,6 +103,7 @@ void read_pause_button() {
 
 	long milliseconds = millis();
 	if(changed && milliseconds -_read_button_pause_ms >= BUTTON_READ_TIME_MS) {
+		_button_pause = val;
 		_read_button_pause_ms = milliseconds;
 		
 		if(val == HIGH) {
