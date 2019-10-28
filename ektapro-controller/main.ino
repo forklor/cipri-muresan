@@ -5,7 +5,7 @@
 #include "times.h"
 
 #define BUTTON_PIN 12
-#define BUTTON_DEBOUNCE_MS 5000
+#define BUTTON_DEBOUNCE_MS 1000
 
 #define STATE_STOPPED 0
 #define STATE_CHANGING 1
@@ -274,6 +274,9 @@ void loop() {
 	int new_btn_state = digitalRead(BUTTON_PIN);
 	
 	if(
+		(prev_btn_state != new_btn_state ||
+			prev_btn_state == -1) 
+		&&
 		(
 			!closed_all_end || 
 			(closed_all_end && ignore_sensor_chrono.hasPassed(IGNORE_SENSOR_ON_STOP_TIME_PASSED_MS))
@@ -282,6 +285,8 @@ void loop() {
 
 		if(btn_chrono.hasPassed(BUTTON_DEBOUNCE_MS)) {
 			btn_chrono.restart();
+
+		prev_btn_state = -1;
 
 		#ifdef DEBUG
 			Serial.println("Button pressed");
