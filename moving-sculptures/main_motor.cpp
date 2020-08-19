@@ -68,7 +68,7 @@ void _setup() {
 	Serial.begin(9600);
 	Serial.println(F("Motor program running"));
 	_wireless_setup(9, 10, MOTOR_MODULE_NUMBER);
-	wireless_listen(WIRELESS_REMOTE, m_wirelessMessageReceived);
+	wireless_listen(MOTOR_MODULE_NUMBER, m_wirelessMessageReceived);
 
 	int check_memory;
 	motorParameters savedParameters;

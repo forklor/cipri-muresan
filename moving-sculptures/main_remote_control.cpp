@@ -15,7 +15,6 @@
 #include "modules/MemoryFree.h"
 
 #define UPDATE_MOTOR_STATUS_MS 1200
-
 #define UPDATE_BATTERY_LEVEL_MS 10000
 
 struct timerParameters {
@@ -23,22 +22,13 @@ struct timerParameters {
 	long stopTime;
 };
 
-int _all_addresses[6] = {
-		WIRELESS_MODULE_1,
-		WIRELESS_MODULE_2,
-		WIRELESS_MODULE_3,
-		WIRELESS_MODULE_4,
-		WIRELESS_MODULE_5,
-		WIRELESS_MODULE_6
-	};
-
 wirelessMessage statusMsg;
 
 void timerStateChanged(bool running) {
 
 	wirelessMessage msg;
 	msg.type = running ? MESSAGE_START : MESSAGE_STOP;
-	wireless_send_message(_all_addresses, 6, msg);
+	wireless_send_message_all(msg);
 }
 
 motorStatus currentMotorStatus;
@@ -473,7 +463,9 @@ void start_stop_all_pressed() {
 		}
 	}
 
-	if(validCommand) wireless_send_message(_all_addresses, 6, msg);
+	if(validCommand) {
+		wireless_send_message_all(msg);
+	}
 }
 
 
@@ -696,16 +688,14 @@ void keypadListener(Key *keys, int keysLen) {
 
 void get_all_motor_status() {
 
-	//Serial.println("get all motor status");
-	
-	wireless_send_message(_all_addresses, 6, statusMsg);
+	wireless_send_message_all(statusMsg);
 }
 
 void _setup() {
 
 	Serial.begin(9600);
 	Serial.println(F("Remote control program running"));
-	_wireless_setup(A0, A1, WIRELESS_REMOTE);
+	_wireless_setup_remote(A0, A1);
 	wireless_listen_ack(rc_wirelessMessageAckReceived);
 	wireless_listen_send_timeout(rc_wirelessMessageTimeout);
 	_keypad_setup(keypadListener);

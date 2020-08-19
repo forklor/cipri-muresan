@@ -176,8 +176,8 @@ motorParameters motor_get_parameters() {
 
 motorStatus motor_get_status() {
 
-	Serial.print("motor status battery");
-	Serial.println(batteryLevel);
+	//Serial.print("motor status battery");
+	//Serial.println(batteryLevel);
 
 	motorStatus status = {
 		_currentSpeed,

@@ -11,9 +11,9 @@ struct motorParameters {
 
 struct motorStatus {
 	int speed;
-	int direction;
-	int cs1;
-	int cs2;
+	byte direction;
+	byte cs1;
+	byte cs2;
 	int battery;
 	bool disabled;
 };

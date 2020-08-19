@@ -12,8 +12,8 @@
 #define MESSAGE_MOTOR_STATUS 7
 
 struct wirelessMessage {
-	int type;
-	int motorModuleNumber;
+	byte type;
+	byte motorModuleNumber;
 	motorParameters parameters;
 	motorStatus status;
 };
