@@ -20,5 +20,6 @@ void wireless_listen_send_timeout(void (*f)(int, wirelessMessage));
 void wireless_listen(int targetAddress, wirelessMessage (*f)(wirelessMessage));
 void wireless_send_message(int targetAddress, wirelessMessage msg);
 void wireless_send_message_all(wirelessMessage msg);
+bool wireless_send_is_busy();
 
 #endif //WIRELESS_H_

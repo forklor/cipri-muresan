@@ -109,6 +109,10 @@ void checkIfMultipleMessages() {
 	}
 }
 
+bool wireless_send_is_busy() {
+	return sendMesssageMultiple;
+}
+
 void _wireless_loop(long milliseconds) {
 
 	if(listening && milliseconds - lastLoopListenTime >= LOOP_LISTEN_TIME_MS) {

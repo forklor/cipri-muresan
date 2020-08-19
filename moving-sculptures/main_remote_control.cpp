@@ -687,8 +687,9 @@ void keypadListener(Key *keys, int keysLen) {
 }
 
 void get_all_motor_status() {
-
-	wireless_send_message_all(statusMsg);
+	if(!wireless_send_is_busy()) {
+		wireless_send_message_all(statusMsg);
+	}
 }
 
 void _setup() {
