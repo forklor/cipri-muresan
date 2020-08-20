@@ -135,7 +135,7 @@ void displayBatteryStatus(int value, int motorNo, bool running, bool disabled, b
 		display_lcd.createChar(motorNo - 1, batlevel);
 		display_lcd.setCursor(x, y);
 		display_lcd.write(byte(motorNo - 1));
-	} else if(voltage > level5) {
+	} else if(voltage > level5 && voltage <= level6) {
 		byte batlevel[8] = {
 			B01110,
 			B11111,
@@ -383,6 +383,9 @@ void _menu_setup() {
 }
 
 void menu_set_battery_level(int level, int motorNo, bool running, bool disabled, bool reachable) {
+	if(display_has_message()) {
+		return;
+	}
 	switch (motorNo) {
 		case 1:
 			bat1 = level;

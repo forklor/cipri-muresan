@@ -95,7 +95,7 @@ void setTimerValueDown(long diff) {
 }
 
 
-void startSettingTimeValue(long value, char *displayName) {
+void startSettingTimeValue(long value, const char *displayName) {
 	timerValue = value;
 
 	display_lcd.clear();
@@ -185,32 +185,14 @@ void updateInputMotorParameters() {
 }
 
 
-void rc_wirelessMessageRespReceived(wirelessMessageResponse message) {
-	// Serial.print("received message ");
-	// Serial.print(message.type);
-	// Serial.print("motor: ");
-	// Serial.print(message.motorModuleNumber);
-	// Serial.print("screen_current: ");
-	// Serial.println(menu_get_current());
-	// Serial.print("screen_display: ");
-	// Serial.println(menu_get_display());
+void rc_wirelessMessageAckReceived(wirelessMessageResponse message) {
 
-	if(message.type == MESSAGE_GET_PARAMS &&
+	if((message.type == MESSAGE_GET_PARAMS || message.type == MESSAGE_MOTOR_STATUS) &&
 		menu_get_current() == MENU_GET_MOTOR_STATUS &&
 		selectedMotorNumber == message.motorModuleNumber) {
 
 		settingParameters = message.parameters;
 		updateInputMotorParameters();
-		// Serial.print("s: ");
-		// Serial.print(message.parameters.maxSpeed);
-		// Serial.print(" a: ");
-		// Serial.print(message.parameters.acceleration);
-		// Serial.print(" d: ");
-		// Serial.print(message.parameters.decelerationPercentage);
-		// Serial.print(" cs: ");
-		// Serial.print(message.parameters.csThreshold);
-		// Serial.print(" t: ");
-		// Serial.println(message.parameters.changeDirTime);
 	}
 
 	if(message.type == MESSAGE_MOTOR_STATUS
@@ -220,16 +202,7 @@ void rc_wirelessMessageRespReceived(wirelessMessageResponse message) {
 
 		currentMotorStatus = message.status;
 		displayMotorStatus();
-		// Serial.print("s: ");
-		// Serial.print(message.status.speed);
-		// Serial.print(" d: ");
-		// Serial.print(message.status.direction);
-		// Serial.print(" cs1: ");
-		// Serial.print(message.status.cs1);
-		// Serial.print(" cs2: ");
-		// Serial.println(message.status.cs2);
 	}
-
 
 	if(
 		message.type == MESSAGE_MOTOR_STATUS && 
@@ -248,19 +221,7 @@ void rc_wirelessMessageRespReceived(wirelessMessageResponse message) {
 		Serial.println(message.status.disabled);
 
 		updateBatteryIndicator(message.status.battery, message.motorModuleNumber, message.status.speed > 0, message.status.disabled, true);
-		// Serial.print("s: ");
-		// Serial.print(message.status.speed);
-		// Serial.print(" d: ");
-		// Serial.print(message.status.direction);
-		// Serial.print(" cs1: ");
-		// Serial.print(message.status.cs1);
-		// Serial.print(" cs2: ");
-		// Serial.println(message.status.cs2);
 	}
-}
-
-void rc_wirelessMessageAckReceived(wirelessMessageAck message) {
-	// TODO?	
 }
 
 void ok_pressed() {
@@ -688,7 +649,6 @@ void _setup() {
 	Serial.println(F("Remote control program running"));
 	_wireless_setup_remote(A0, A1);
 	wireless_listen_ack(rc_wirelessMessageAckReceived);
-	wireless_listen_response(rc_wirelessMessageRespReceived);
 	_keypad_setup(keypadListener);
 	_display_setup();
 	_menu_setup();

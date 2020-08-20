@@ -27,7 +27,7 @@ void _display_loop(long milliseconds) {
 	}
 }
 
-void display_show_message(char *line1, char *line2, long timeMs) {
+void display_show_message(const char *line1, const char *line2, long timeMs) {
 	display_lcd.clear();
 	display_lcd.setCursor(0, 0);
 	display_lcd.print(line1);

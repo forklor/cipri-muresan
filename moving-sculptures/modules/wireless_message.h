@@ -16,10 +16,6 @@ struct wirelessMessageCommand {
 	motorParameters parameters;
 };
 
-struct wirelessMessageAck {
-	byte motorModuleNumber;
-};
-
 struct wirelessMessageResponse {
 	byte type;
 	byte motorModuleNumber;

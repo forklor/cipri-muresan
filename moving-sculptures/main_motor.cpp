@@ -17,19 +17,14 @@ void saveMotorParameters(motorParameters params) {
 	EEPROM.put(sizeof(int), params);
 }
 
-wirelessMessageAck m_wirelessMessageReceived(wirelessMessageCommand message) {
+void m_wirelessMessageReceived(wirelessMessageCommand message) {
+
 	Serial.print(F("received message "));
 	Serial.println(message.type);
-
-	wirelessMessageAck ack;
-	ack.motorModuleNumber = MOTOR_MODULE_NUMBER;
 
 	switch (message.type) {
 		case MESSAGE_TOGGLE_START_STOP:
 			if(!motor_is_disabled()) motor_toggle_start_stop();
-			break;
-		case MESSAGE_GET_PARAMS:
-			message.parameters = motor_get_parameters();
 			break;
 		case MESSAGE_CHANGE_DIRECTION: 
 			if(!motor_is_disabled()) motor_switch_direction();
@@ -40,42 +35,41 @@ wirelessMessageAck m_wirelessMessageReceived(wirelessMessageCommand message) {
 		case MESSAGE_STOP:
 			if(!motor_is_disabled()) motor_stop();
 			break;
-		default:
-			Serial.println(F("Unknown message type"));
-	}
-
-	return ack;
-}
-
-
-wirelessMessageResponse m_wirelessMessageWithResponseReceived(wirelessMessageCommand message) {
-	Serial.print(F("received message "));
-	Serial.println(message.type);
-
-	wirelessMessageResponse resp;
-	resp.motorModuleNumber = MOTOR_MODULE_NUMBER;
-	resp.type = message.type;
-
-	switch (message.type) {
 		case MESSAGE_GET_PARAMS:
-			resp.parameters = motor_get_parameters();
+			break;
 		case MESSAGE_MOTOR_STATUS:
-			resp.status = motor_get_status();
+			break;
+		case MESSAGE_SET_PARAMS:
+			if(!motor_is_disabled()) {
+				Serial.print(F("setting params \nspeed:"));
+				Serial.print(message.parameters.maxSpeed);
+				Serial.print(F("acc:"));
+				Serial.print(message.parameters.acceleration);
+				Serial.print(F("decc:"));
+				Serial.println(message.parameters.decelerationPercentage);
+				motor_set_parameters(message.parameters);
+				saveMotorParameters(message.parameters);
+			}
 			break;
 		default:
 			Serial.println(F("Unknown message type"));
 	}
 
-	return resp;
-}
+	wirelessMessageResponse ack;
+	ack.type = MESSAGE_MOTOR_STATUS;
+	ack.motorModuleNumber = MOTOR_MODULE_NUMBER;
+	ack.parameters = motor_get_parameters();
+	ack.status = motor_get_status();
 
+	wireless_setAckResponse(ack);
+}
 
 void _setup() {
 
 	Serial.begin(9600);
 	Serial.println(F("Motor program running"));
 	_wireless_setup(9, 10, MOTOR_MODULE_NUMBER);
-	wireless_listen(MOTOR_MODULE_NUMBER, m_wirelessMessageReceived, m_wirelessMessageWithResponseReceived);
+
 
 	int check_memory;
 	motorParameters savedParameters;
@@ -84,17 +78,29 @@ void _setup() {
 		Serial.println(F("Found parameters saved in EEPROM"));
 		EEPROM.get(sizeof(int), savedParameters);
 	} else {
-		Serial.println(F("Didn't find parameters saved in EEPROM, initializing..."));
-		saveMotorParameters({
+		savedParameters = {
 			100, 			// Speed
 			20, 			// Accelereration step
 			50, 			// Decceleration percentage
 			500, 			// CS Threshold
 			20000  			// Change dir time
-		});
+		};
+		Serial.println(F("Didn't find parameters saved in EEPROM, initializing..."));
+		saveMotorParameters(savedParameters);
 	}
 	_motor_setup();
 	motor_set_parameters(savedParameters);
+
+	wirelessMessageResponse ack;
+	ack.type = MESSAGE_MOTOR_STATUS;
+	ack.motorModuleNumber = MOTOR_MODULE_NUMBER;
+	ack.parameters = motor_get_parameters();
+	ack.status = motor_get_status();
+
+	wireless_setAckResponse(ack);
+
+	wireless_listen(MOTOR_MODULE_NUMBER, m_wirelessMessageReceived);
+
 }
 
 long displayFreeMemoryMs;
