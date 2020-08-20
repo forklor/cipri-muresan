@@ -3,7 +3,6 @@
 #include "display.h"
 #include "timer.h"
 
-
 #include <MenuBackend.h>
 
 void updateDisplay();
@@ -14,6 +13,8 @@ int bat3;
 int bat4;
 int bat5;
 int bat6;
+
+#define MOTOR_REACHABLE_MAX 4
 
 bool motor1_running;
 bool motor2_running;
@@ -28,6 +29,13 @@ bool motor3_disabled;
 bool motor4_disabled;
 bool motor5_disabled;
 bool motor6_disabled;
+
+byte motor1_reachable_value = MOTOR_REACHABLE_MAX;
+byte motor2_reachable_value = MOTOR_REACHABLE_MAX;
+byte motor3_reachable_value = MOTOR_REACHABLE_MAX;
+byte motor4_reachable_value = MOTOR_REACHABLE_MAX;
+byte motor5_reachable_value = MOTOR_REACHABLE_MAX;
+byte motor6_reachable_value = MOTOR_REACHABLE_MAX;
 
 bool motor1_reachable;
 bool motor2_reachable;
@@ -349,12 +357,12 @@ void _menu_setup() {
 	motor5_disabled = false;
 	motor6_disabled = false;
 
-	motor1_reachable = false;
-	motor2_reachable = false;
-	motor3_reachable = false;
-	motor4_reachable = false;
-	motor5_reachable = false;
-	motor6_reachable = false;
+	motor1_reachable = true;
+	motor2_reachable = true;
+	motor3_reachable = true;
+	motor4_reachable = true;
+	motor5_reachable = true;
+	motor6_reachable = true;
 
 	menu.getRoot().add(mainManual);
 	mainManual.addAfter(mainTimer);
@@ -378,6 +386,19 @@ void _menu_setup() {
 	menu.moveDown();
 }
 
+byte updateReachableValue(byte reachable_value, bool reachable) {
+
+	if(reachable) {
+		return MOTOR_REACHABLE_MAX;
+	}
+
+	if(!reachable && reachable_value > 0) {
+		return reachable_value - 1;
+	}
+
+	return reachable_value;
+}
+
 void menu_set_battery_level(int level, int motorNo, bool running, bool disabled, bool reachable) {
 	
 	switch (motorNo) {
@@ -385,37 +406,43 @@ void menu_set_battery_level(int level, int motorNo, bool running, bool disabled,
 			bat1 = level;
 			motor1_running = running;
 			motor1_disabled = disabled;
-			motor1_reachable = reachable;
+			motor1_reachable_value = updateReachableValue(motor1_reachable_value, reachable);
+			motor1_reachable = motor1_reachable_value > 0;
 			break;
 		case 2:
 			bat2 = level;
 			motor2_running = running;
 			motor2_disabled = disabled;
-			motor2_reachable = reachable;
+			motor2_reachable_value = updateReachableValue(motor2_reachable_value, reachable);
+			motor2_reachable = motor2_reachable_value > 0;
 			break;
 		case 3:
 			bat3 = level;
 			motor3_running = running;
 			motor3_disabled = disabled;
-			motor3_reachable = reachable;
+			motor3_reachable_value = updateReachableValue(motor3_reachable_value, reachable);
+			motor3_reachable = motor3_reachable_value > 0;
 			break;
 		case 4:
 			bat4 = level;
 			motor4_running = running;
 			motor4_disabled = disabled;
-			motor4_reachable = reachable;
+			motor4_reachable_value = updateReachableValue(motor4_reachable_value, reachable);
+			motor4_reachable = motor4_reachable_value > 0;
 			break;
 		case 5:
 			bat5 = level;
 			motor5_running = running;
 			motor5_disabled = disabled;
-			motor5_reachable = reachable;
+			motor5_reachable_value = updateReachableValue(motor5_reachable_value, reachable);
+			motor5_reachable = motor5_reachable_value > 0;
 			break;
 		case 6:
 			bat6 = level;
 			motor6_running = running;
 			motor6_disabled = disabled;
-			motor6_reachable = reachable;
+			motor6_reachable_value = updateReachableValue(motor6_reachable_value, reachable);
+			motor6_reachable = motor6_reachable_value > 0;
 			break;
 		default:
 			break;
