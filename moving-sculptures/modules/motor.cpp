@@ -39,15 +39,18 @@
 motorParameters settings;
 
 int _currentSpeed;
-volatile int _currentDirection;
+volatile byte _currentDirection;
 int _targetSpeed;
-volatile int _targetDirection;
+volatile byte _targetDirection;
 bool motor_disabled;
 
 long _lastLoopMillis;
 long _directionChangeStopMillis;
 long _directionChangeMillis;
 long _timeWhenTargetSpeedReached;
+
+int _cs1;
+int _cs2;
 
 bool _running;
 
@@ -182,8 +185,8 @@ motorStatus motor_get_status() {
 	motorStatus status = {
 		_currentSpeed,
 		_currentDirection,
-		analogRead(CURRENT_SEN_1),
-		analogRead(CURRENT_SEN_2),
+		_cs1,
+		_cs2,
 		batteryLevel,
 		motor_disabled
 	};
@@ -266,14 +269,17 @@ void _motor_loop(long milliseconds) {
 		motor_disabled = true;
 	}
 
+	_cs1 = analogRead(CURRENT_SEN_1);
+	_cs2 = analogRead(CURRENT_SEN_2);
+
 	// If motor is stuck when trying to go in one direction,
 	// switch direction
 	if (_currentSpeed == _targetSpeed &&
 		_currentSpeed > 0 && 
 		_timeWhenTargetSpeedReached > 0 &&
 		milliseconds - _timeWhenTargetSpeedReached > TIME_TO_WAIT_BEFORE_READING_CS_VALUE_MS &&
-		((analogRead(CURRENT_SEN_1)  > settings.csThreshold) || 
-		(analogRead(CURRENT_SEN_2)  > settings.csThreshold))
+		((_cs1  > settings.csThreshold) || 
+		(_cs1  > settings.csThreshold))
 	) {
 		motor_switch_direction();
 		return;
@@ -282,7 +288,7 @@ void _motor_loop(long milliseconds) {
  	// Detect if motor is stuck, stop it if it is
 	if(_currentSpeed == _targetSpeed &&
 		_currentSpeed > 0 &&
-		abs(analogRead(CURRENT_SEN_1) - analogRead(CURRENT_SEN_2)) > CS_DIFFERENCE_MAX) {
+		abs(_cs1 - _cs2) > CS_DIFFERENCE_MAX) {
 
 		motor_stop();
 		return;
