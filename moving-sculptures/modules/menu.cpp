@@ -86,8 +86,7 @@ void displayBatteryStatus(int value, int motorNo, bool running, bool disabled, b
 		level2 = 666,
 		level3 = 674,
 		level4 = 682,
-		level5 = 690,
-		level6 = 700;
+		level5 = 690;
 
 	if(running) {
 		level0 = 535;
@@ -96,7 +95,6 @@ void displayBatteryStatus(int value, int motorNo, bool running, bool disabled, b
 		level3 = 609;
 		level4 = 634;
 		level5 = 659;
-		level6 = 684;
 	}
 
 
@@ -105,23 +103,21 @@ void displayBatteryStatus(int value, int motorNo, bool running, bool disabled, b
 	//Serial.print(" voltage=");
 	//Serial.println(voltage);
 
-	// if(!reachable) {
-	// 	byte batlevel[8] = {
-	// 		B10001,
-	// 		B01010,
-	// 		B01010,
-	// 		B00100,
-	// 		B00100,
-	// 		B01010,
-	// 		B01010,
-	// 		B10001,
-	// 	};
-	// 	display_lcd.createChar(motorNo - 1, batlevel);
-	// 	display_lcd.setCursor(x, y);
-	// 	display_lcd.write(byte(motorNo - 1));
-	// } else
-
-	 if(disabled) {
+	if(!reachable) {
+		byte batlevel[8] = {
+			B10001,
+			B01010,
+			B01010,
+			B00100,
+			B00100,
+			B01010,
+			B01010,
+			B10001,
+		};
+		display_lcd.createChar(motorNo - 1, batlevel);
+		display_lcd.setCursor(x, y);
+		display_lcd.write(byte(motorNo - 1));
+	} else if(disabled) {
 		byte batlevel[8] = {
 			B01110,
 			B11111,
@@ -135,7 +131,7 @@ void displayBatteryStatus(int value, int motorNo, bool running, bool disabled, b
 		display_lcd.createChar(motorNo - 1, batlevel);
 		display_lcd.setCursor(x, y);
 		display_lcd.write(byte(motorNo - 1));
-	} else if(voltage > level5 && voltage <= level6) {
+	} else if(voltage > level5) {
 		byte batlevel[8] = {
 			B01110,
 			B11111,
@@ -383,9 +379,7 @@ void _menu_setup() {
 }
 
 void menu_set_battery_level(int level, int motorNo, bool running, bool disabled, bool reachable) {
-	if(display_has_message()) {
-		return;
-	}
+	
 	switch (motorNo) {
 		case 1:
 			bat1 = level;
@@ -426,7 +420,10 @@ void menu_set_battery_level(int level, int motorNo, bool running, bool disabled,
 		default:
 			break;
 	}
-	displayBatteryStatus(level, motorNo, running, disabled, reachable);
+
+	if(!display_has_message()) {
+		displayBatteryStatus(level, motorNo, running, disabled, reachable);
+	}
 }
 
 char menu_get_current() {

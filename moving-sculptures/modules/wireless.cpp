@@ -13,9 +13,10 @@ byte wireless_addresses[][6] = {"1Node", "2Node", "3Node", "4Node", "5Node", "6N
 RF24 *radio;
 
 void (*_w_ack_listener)(wirelessMessageResponse);
+void (*_w_send_fail_listener)(int);
 void (*_w_listener)(wirelessMessageCommand);
 
-void checkIfMultipleMessages();
+void checkIfMultipleMessages(bool retry);
 
 bool listening;
 int localAddress;
@@ -34,13 +35,14 @@ int targetAddressIndex;
 bool sendMesssageMultiple;
 
 wirelessMessageResponse ackResponse;
+bool retry = false;
 
 void _radio_setup(int pinA, int pinB) {
 
 	radio = new RF24(pinA, pinB);
 	radio->begin();
-	radio->setPALevel(RF24_PA_HIGH);
-	radio->setDataRate(RF24_250KBPS);
+	radio->setPALevel(RF24_PA_MAX); // RF24_PA_MIN, RF24_PA_LOW, RF24_PA_HIGH and RF24_PA_MAX
+	radio->setDataRate(RF24_250KBPS); // RF24_250KBPS for 250kbs, RF24_1MBPS for 1Mbps, or RF24_2MBPS for 2Mbps
 	radio->setChannel(108);
 	radio->enableAckPayload();
 	radio->enableDynamicPayloads();
@@ -80,11 +82,13 @@ void _wireless_send_message(int targetAddress, wirelessMessageCommand msg) {
 
 }
 
-void checkIfMultipleMessages() {
+void checkIfMultipleMessages(bool retry) {
 
 	if(!sendMesssageMultiple) return;
 
-	targetAddressIndex += 1;
+	if(!retry) {
+		targetAddressIndex += 1;
+	}
 
 	if(targetAddressIndex < targetAddressesLen) {
 		_wireless_send_message(targetAddressIndex + 1, messageToSend);
@@ -130,12 +134,18 @@ void _wireless_loop(long milliseconds) {
 		radio->openWritingPipe(wireless_addresses[sendMessagetargetAddress]); // module_x
 
 		if (!radio->write(&messageToSend, sizeof(messageToSend))) {
-
-			Serial.print(F("Failed writing message "));
-			Serial.println(messageToSend.type);
+			if(retry) {
+				Serial.print(F("Failed writing message after 2 tries"));
+				Serial.println(messageToSend.type);
+				if(_w_send_fail_listener != NULL) {
+					_w_send_fail_listener(sendMessagetargetAddress);
+				}
+			}
+			retry = !retry;
 
 		} else {
 
+			retry = false;
 			startWaitingForAckTime = millis();
 
 			bool timeout = false;
@@ -159,7 +169,7 @@ void _wireless_loop(long milliseconds) {
 			}
 		}
 		sendMessage = false;
-		checkIfMultipleMessages();
+		checkIfMultipleMessages(retry);
 	}
 }
 
@@ -178,9 +188,7 @@ void wireless_send_message_all(wirelessMessageCommand msg) {
 	listening = false;
 	sendMessage = false;
 
-	Serial.print(F("Send multiple messages to "));
-	Serial.print(6);
-	Serial.print(F(" msg "));
+	Serial.print(F("Send message to all"));
 	Serial.println(msg.type);
 
 	sendMesssageMultiple = true;
@@ -199,6 +207,10 @@ void wireless_listen_ack(void (*f)(wirelessMessageResponse)) {
 
 void wireless_setAckResponse(wirelessMessageResponse msg) {
 	ackResponse = msg;
+}
+
+void wireless_send_message_all_fail_listener(void (*f)(int)) {
+	_w_send_fail_listener = f;
 }
 
 void wireless_listen(int targetAddress,  void (*f)(wirelessMessageCommand)) {

@@ -20,6 +20,7 @@ void wireless_setAckResponse(wirelessMessageResponse msg);
 void wireless_listen(int targetAddress, void (*f)(wirelessMessageCommand));
 void wireless_send_message(int targetAddress, wirelessMessageCommand msg);
 void wireless_send_message_all(wirelessMessageCommand msg);
+void wireless_send_message_all_fail_listener(void (*f)(int));
 bool wireless_send_is_busy();
 
 #endif //WIRELESS_H_

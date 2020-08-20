@@ -15,7 +15,7 @@
 #include "modules/MemoryFree.h"
 
 #define UPDATE_MOTOR_STATUS_MS 1200
-#define UPDATE_BATTERY_LEVEL_MS 10000
+#define UPDATE_BATTERY_LEVEL_MS 5000
 
 struct timerParameters {
 	long runTime;
@@ -37,6 +37,8 @@ long lastUpdateBatteryTime;
 motorParameters settingParameters;
 int selectedMotorNumber;
 bool updatingMotorStatus = false;
+bool sentStopAll = false;
+bool sentStartAll = false;
 
 void displayMotorStatus() {
 	updatingMotorStatus = true;
@@ -184,6 +186,9 @@ void updateInputMotorParameters() {
 	}
 }
 
+void rc_wirelessMessageSendFailed(int address) {
+	updateBatteryIndicator(0, address, false, false, false);
+}
 
 void rc_wirelessMessageAckReceived(wirelessMessageResponse message) {
 
@@ -219,6 +224,16 @@ void rc_wirelessMessageAckReceived(wirelessMessageResponse message) {
 		Serial.print(message.status.speed);
 		Serial.print(" disabled: ");
 		Serial.println(message.status.disabled);
+
+		if(sentStopAll && message.status.speed != 0 && !wireless_send_is_busy()) {
+			Serial.println("Fixing stop all on status");
+			wireless_send_message(message.motorModuleNumber, {MESSAGE_STOP});
+		}
+
+		if(sentStartAll && message.status.speed == 0 && !wireless_send_is_busy()) {
+			Serial.println("Fixing start all on status");
+			wireless_send_message(message.motorModuleNumber, {MESSAGE_START});
+		}
 
 		updateBatteryIndicator(message.status.battery, message.motorModuleNumber, message.status.speed > 0, message.status.disabled, true);
 	}
@@ -389,12 +404,14 @@ void start_stop_all_pressed() {
 			msg.type = MESSAGE_STOP;
 			timer_stop();
 			timer_set_state(false);
+			sentStopAll = true;
 			validCommand = true;
 		} else {
 			display_show_message("STARTING", "ALL MOTORS", 1500);
 			msg.type = MESSAGE_START;
 			timer_stop();
 			timer_set_state(true);
+			sentStartAll = true;
 			validCommand = true;
 		}
 
@@ -403,13 +420,15 @@ void start_stop_all_pressed() {
 			display_show_message("STOPPING", "ALL MOTORS TIMER", 1500);
 			timer_set_state(false);
 			if(timer_is_paused()) timer_start();
-			msg.type = MESSAGE_START;
+			msg.type = MESSAGE_STOP;
+			sentStopAll = true;
 			validCommand = true;
 		} else {
 			display_show_message("STARTING", "ALL MOTORS TIMER", 1500);
 			timer_set_state(true);
 			if(timer_is_paused()) timer_start();
 			msg.type = MESSAGE_START;
+			sentStartAll = true;
 			validCommand = true;
 		}
 	}
@@ -462,6 +481,10 @@ bool isMenuAboutCurrentMotorInfo(char displayMenu, int motorNo) {
 }
 
 void keyReleased(char key) {
+
+	sentStartAll = false;
+	sentStopAll = false;
+
 	wirelessMessageCommand msg;
 	char currentMenu = menu_get_current();
 	char displayMenu = menu_get_display();
@@ -649,6 +672,7 @@ void _setup() {
 	Serial.println(F("Remote control program running"));
 	_wireless_setup_remote(A0, A1);
 	wireless_listen_ack(rc_wirelessMessageAckReceived);
+	wireless_send_message_all_fail_listener(rc_wirelessMessageSendFailed);
 	_keypad_setup(keypadListener);
 	_display_setup();
 	_menu_setup();
