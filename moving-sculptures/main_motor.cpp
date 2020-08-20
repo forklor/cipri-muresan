@@ -17,27 +17,16 @@ void saveMotorParameters(motorParameters params) {
 	EEPROM.put(sizeof(int), params);
 }
 
-wirelessMessage m_wirelessMessageReceived(wirelessMessage message) {
+wirelessMessageAck m_wirelessMessageReceived(wirelessMessageCommand message) {
 	Serial.print(F("received message "));
 	Serial.println(message.type);
 
-	message.motorModuleNumber = MOTOR_MODULE_NUMBER;
+	wirelessMessageAck ack;
+	ack.motorModuleNumber = MOTOR_MODULE_NUMBER;
 
 	switch (message.type) {
 		case MESSAGE_TOGGLE_START_STOP:
 			if(!motor_is_disabled()) motor_toggle_start_stop();
-			break;
-		case MESSAGE_SET_PARAMS:
-			if(!motor_is_disabled()) {
-				Serial.print(F("speed:"));
-				Serial.print(message.parameters.maxSpeed);
-				Serial.print(F("acc:"));
-				Serial.print(message.parameters.acceleration);
-				Serial.print(F("decc:"));
-				Serial.println(message.parameters.decelerationPercentage);
-				motor_set_parameters(message.parameters);
-				saveMotorParameters(message.parameters);
-			}
 			break;
 		case MESSAGE_GET_PARAMS:
 			message.parameters = motor_get_parameters();
@@ -51,16 +40,34 @@ wirelessMessage m_wirelessMessageReceived(wirelessMessage message) {
 		case MESSAGE_STOP:
 			if(!motor_is_disabled()) motor_stop();
 			break;
+		default:
+			Serial.println(F("Unknown message type"));
+	}
+
+	return ack;
+}
+
+
+wirelessMessageResponse m_wirelessMessageWithResponseReceived(wirelessMessageCommand message) {
+	Serial.print(F("received message "));
+	Serial.println(message.type);
+
+	wirelessMessageResponse resp;
+	resp.motorModuleNumber = MOTOR_MODULE_NUMBER;
+	resp.type = message.type;
+
+	switch (message.type) {
+		case MESSAGE_GET_PARAMS:
+			resp.parameters = motor_get_parameters();
 		case MESSAGE_MOTOR_STATUS:
-			message.status = motor_get_status();
+			resp.status = motor_get_status();
 			break;
 		default:
 			Serial.println(F("Unknown message type"));
 	}
 
-	return message;
+	return resp;
 }
-
 
 
 void _setup() {
@@ -68,7 +75,7 @@ void _setup() {
 	Serial.begin(9600);
 	Serial.println(F("Motor program running"));
 	_wireless_setup(9, 10, MOTOR_MODULE_NUMBER);
-	wireless_listen(MOTOR_MODULE_NUMBER, m_wirelessMessageReceived);
+	wireless_listen(MOTOR_MODULE_NUMBER, m_wirelessMessageReceived, m_wirelessMessageWithResponseReceived);
 
 	int check_memory;
 	motorParameters savedParameters;

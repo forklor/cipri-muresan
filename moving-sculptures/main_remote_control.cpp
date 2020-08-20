@@ -22,11 +22,11 @@ struct timerParameters {
 	long stopTime;
 };
 
-wirelessMessage statusMsg;
+wirelessMessageCommand statusMsg;
 
 void timerStateChanged(bool running) {
 
-	wirelessMessage msg;
+	wirelessMessageCommand msg;
 	msg.type = running ? MESSAGE_START : MESSAGE_STOP;
 	wireless_send_message_all(msg);
 }
@@ -184,21 +184,8 @@ void updateInputMotorParameters() {
 	}
 }
 
-void rc_wirelessMessageTimeout(int targetAddress, wirelessMessage message) {
-	if(
-		message.type == MESSAGE_MOTOR_STATUS && 
-		(
-			menu_get_display() == MENU_TIMER ||
-			menu_get_display() == MENU_MANUAL
-		)
-	) {
-		//Serial.print("Timeout");
-		//Serial.println(targetAddress);
-		//updateBatteryIndicator(0, targetAddress, false, false, false);
-	}
-}
 
-void rc_wirelessMessageAckReceived(wirelessMessage message) {
+void rc_wirelessMessageRespReceived(wirelessMessageResponse message) {
 	// Serial.print("received message ");
 	// Serial.print(message.type);
 	// Serial.print("motor: ");
@@ -272,6 +259,9 @@ void rc_wirelessMessageAckReceived(wirelessMessage message) {
 	}
 }
 
+void rc_wirelessMessageAckReceived(wirelessMessageAck message) {
+	// TODO?	
+}
 
 void ok_pressed() {
 
@@ -338,7 +328,7 @@ void ok_pressed() {
 		}
 
 		if(updateParams) {
-			wirelessMessage msg;
+			wirelessMessageCommand msg;
 			msg.type = MESSAGE_SET_PARAMS;
 			msg.parameters = settingParameters;
 			wireless_send_message(selectedMotorNumber, msg);
@@ -428,7 +418,7 @@ void start_stop_all_pressed() {
 		return;
 	}
 
-	wirelessMessage msg;
+	wirelessMessageCommand msg;
 	bool validCommand = false;
 	char displayMenu = menu_get_display();
 
@@ -487,7 +477,7 @@ void start_program_motor(int motorNo) {
 	menu_right();
 	menu_select();
 	selectedMotorNumber = motorNo;
-	wirelessMessage msg;
+	wirelessMessageCommand msg;
 	msg.type = MESSAGE_GET_PARAMS;
 	wireless_send_message(motorNo, msg);
 	updateInputMotorParameters();
@@ -511,7 +501,7 @@ bool isMenuAboutCurrentMotorInfo(char displayMenu, int motorNo) {
 }
 
 void keyReleased(char key) {
-	wirelessMessage msg;
+	wirelessMessageCommand msg;
 	char currentMenu = menu_get_current();
 	char displayMenu = menu_get_display();
 	switch(key) {
@@ -698,7 +688,7 @@ void _setup() {
 	Serial.println(F("Remote control program running"));
 	_wireless_setup_remote(A0, A1);
 	wireless_listen_ack(rc_wirelessMessageAckReceived);
-	wireless_listen_send_timeout(rc_wirelessMessageTimeout);
+	wireless_listen_response(rc_wirelessMessageRespReceived);
 	_keypad_setup(keypadListener);
 	_display_setup();
 	_menu_setup();

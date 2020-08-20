@@ -15,11 +15,11 @@ void _wireless_setup_remote(int pinA, int pinB);
 void _wireless_setup(int pinA, int pinB, int localAddress);
 void _wireless_loop(long milliseconds);
 
-void wireless_listen_ack(void (*f)(wirelessMessage));
-void wireless_listen_send_timeout(void (*f)(int, wirelessMessage));
-void wireless_listen(int targetAddress, wirelessMessage (*f)(wirelessMessage));
-void wireless_send_message(int targetAddress, wirelessMessage msg);
-void wireless_send_message_all(wirelessMessage msg);
+void wireless_listen_ack(void (*f)(wirelessMessageAck));
+void wireless_listen_response(void (*f)(wirelessMessageResponse));
+void wireless_listen(int targetAddress, wirelessMessageAck (*f)(wirelessMessageCommand), wirelessMessageResponse (*r)(wirelessMessageCommand));
+void wireless_send_message(int targetAddress, wirelessMessageCommand msg);
+void wireless_send_message_all(wirelessMessageCommand msg);
 bool wireless_send_is_busy();
 
 #endif //WIRELESS_H_

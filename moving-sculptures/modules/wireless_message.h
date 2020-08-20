@@ -11,7 +11,16 @@
 #define MESSAGE_STOP 6
 #define MESSAGE_MOTOR_STATUS 7
 
-struct wirelessMessage {
+struct wirelessMessageCommand {
+	byte type;
+	motorParameters parameters;
+};
+
+struct wirelessMessageAck {
+	byte motorModuleNumber;
+};
+
+struct wirelessMessageResponse {
 	byte type;
 	byte motorModuleNumber;
 	motorParameters parameters;
