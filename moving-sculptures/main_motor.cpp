@@ -38,6 +38,20 @@ void m_wirelessMessageReceived(wirelessMessageCommand message) {
 		case MESSAGE_GET_PARAMS:
 			break;
 		case MESSAGE_MOTOR_STATUS:
+			// Check if the current status of the motor is the same with the last start /stop all cmd sent  
+			// (these are sent as motorParameters.maxSpeed and motorParamenters.acceleration part
+			// of the status message, see remote code)
+			// 
+			// maxSpeed = sentStartAll ? 1 : 0;
+			// acceleration = sentStopAll ? 1 : 0;
+			
+			if(message.parameters.maxSpeed == 1 && !motor_is_running()) {
+				motor_start();
+			}
+
+			if(message.parameters.acceleration == 1 && motor_is_running()) {
+				motor_stop();
+			}
 			break;
 		case MESSAGE_SET_PARAMS:
 			if(!motor_is_disabled()) {

@@ -14,7 +14,7 @@ int bat4;
 int bat5;
 int bat6;
 
-#define MOTOR_REACHABLE_MAX 4
+#define MOTOR_REACHABLE_MAX 5
 
 bool motor1_running;
 bool motor2_running;
@@ -30,12 +30,12 @@ bool motor4_disabled;
 bool motor5_disabled;
 bool motor6_disabled;
 
-byte motor1_reachable_value = MOTOR_REACHABLE_MAX;
-byte motor2_reachable_value = MOTOR_REACHABLE_MAX;
-byte motor3_reachable_value = MOTOR_REACHABLE_MAX;
-byte motor4_reachable_value = MOTOR_REACHABLE_MAX;
-byte motor5_reachable_value = MOTOR_REACHABLE_MAX;
-byte motor6_reachable_value = MOTOR_REACHABLE_MAX;
+byte motor1_reachable_value = 0;
+byte motor2_reachable_value = 0;
+byte motor3_reachable_value = 0;
+byte motor4_reachable_value = 0;
+byte motor5_reachable_value = 0;
+byte motor6_reachable_value = 0;
 
 bool motor1_reachable;
 bool motor2_reachable;
@@ -400,56 +400,84 @@ byte updateReachableValue(byte reachable_value, bool reachable) {
 }
 
 void menu_set_battery_level(int level, int motorNo, bool running, bool disabled, bool reachable) {
-	
+
+	bool canUpdate = !display_has_message();
 	switch (motorNo) {
 		case 1:
-			bat1 = level;
-			motor1_running = running;
-			motor1_disabled = disabled;
 			motor1_reachable_value = updateReachableValue(motor1_reachable_value, reachable);
 			motor1_reachable = motor1_reachable_value > 0;
+			if(reachable) {
+				bat1 = level;
+				motor1_running = running;
+				motor1_disabled = disabled;
+			}
+			if(canUpdate) {
+				displayBatteryStatus(bat1, 1, motor1_running, motor1_disabled, motor1_reachable);
+			}
 			break;
 		case 2:
-			bat2 = level;
-			motor2_running = running;
-			motor2_disabled = disabled;
+			if(reachable) {
+				bat2 = level;
+				motor2_running = running;
+				motor2_disabled = disabled;
+			}
 			motor2_reachable_value = updateReachableValue(motor2_reachable_value, reachable);
 			motor2_reachable = motor2_reachable_value > 0;
+			if(canUpdate) {
+				displayBatteryStatus(bat2, 2, motor2_running, motor2_disabled, motor2_reachable);
+			}
 			break;
 		case 3:
-			bat3 = level;
-			motor3_running = running;
-			motor3_disabled = disabled;
+			if(reachable) {
+				bat3 = level;
+				motor3_running = running;
+				motor3_disabled = disabled;
+			}
 			motor3_reachable_value = updateReachableValue(motor3_reachable_value, reachable);
 			motor3_reachable = motor3_reachable_value > 0;
+			if(canUpdate) {
+				displayBatteryStatus(bat3, 3, motor3_running, motor3_disabled, motor3_reachable);
+			}
+
 			break;
 		case 4:
-			bat4 = level;
-			motor4_running = running;
-			motor4_disabled = disabled;
+			if(reachable) {
+				bat4 = level;
+				motor4_running = running;
+				motor4_disabled = disabled;
+			}
 			motor4_reachable_value = updateReachableValue(motor4_reachable_value, reachable);
 			motor4_reachable = motor4_reachable_value > 0;
+			if(canUpdate) {
+				displayBatteryStatus(bat4, 4, motor4_running, motor4_disabled, motor4_reachable);
+			}
 			break;
 		case 5:
-			bat5 = level;
-			motor5_running = running;
-			motor5_disabled = disabled;
+			if(reachable) {
+				bat5 = level;
+				motor5_running = running;
+				motor5_disabled = disabled;
+			}
 			motor5_reachable_value = updateReachableValue(motor5_reachable_value, reachable);
 			motor5_reachable = motor5_reachable_value > 0;
+			if(canUpdate) {
+				displayBatteryStatus(bat5, 5, motor5_running, motor5_disabled, motor5_reachable);
+			}
 			break;
 		case 6:
-			bat6 = level;
-			motor6_running = running;
-			motor6_disabled = disabled;
+			if(reachable) {
+				bat6 = level;
+				motor6_running = running;
+				motor6_disabled = disabled;
+			}
 			motor6_reachable_value = updateReachableValue(motor6_reachable_value, reachable);
-			motor6_reachable = motor6_reachable_value > 0;
+			motor6_reachable  = motor6_reachable_value > 0;
+			if(canUpdate) {
+				displayBatteryStatus(bat6, 6, motor6_running, motor6_disabled, motor6_reachable);
+			}
 			break;
 		default:
 			break;
-	}
-
-	if(!display_has_message()) {
-		displayBatteryStatus(level, motorNo, running, disabled, reachable);
 	}
 }
 

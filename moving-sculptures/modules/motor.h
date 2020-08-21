@@ -27,6 +27,7 @@ void motor_stop_brake();
 void motor_toggle_start_stop();
 void motor_switch_direction();
 void motor_set_parameters(motorParameters params);
+bool motor_is_running();
 motorParameters motor_get_parameters();
 motorStatus motor_get_status();
 

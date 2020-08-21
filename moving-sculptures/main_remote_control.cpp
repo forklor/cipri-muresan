@@ -24,12 +24,7 @@ struct timerParameters {
 
 wirelessMessageCommand statusMsg;
 
-void timerStateChanged(bool running) {
 
-	wirelessMessageCommand msg;
-	msg.type = running ? MESSAGE_START : MESSAGE_STOP;
-	wireless_send_message_all(msg);
-}
 
 motorStatus currentMotorStatus;
 long lastUpdateStatusTime;
@@ -39,6 +34,15 @@ int selectedMotorNumber;
 bool updatingMotorStatus = false;
 bool sentStopAll = false;
 bool sentStartAll = false;
+
+
+void timerStateChanged(bool running) {
+
+	wirelessMessageCommand msg;
+	msg.type = running ? MESSAGE_START : MESSAGE_STOP;
+	wireless_send_message_all(msg);
+	lastUpdateBatteryTime = millis();
+}
 
 void displayMotorStatus() {
 	updatingMotorStatus = true;
@@ -224,16 +228,6 @@ void rc_wirelessMessageAckReceived(wirelessMessageResponse message) {
 		Serial.print(message.status.speed);
 		Serial.print(" disabled: ");
 		Serial.println(message.status.disabled);
-
-		if(sentStopAll && message.status.speed != 0 && !wireless_send_is_busy()) {
-			Serial.println("Fixing stop all on status");
-			wireless_send_message(message.motorModuleNumber, {MESSAGE_STOP});
-		}
-
-		if(sentStartAll && message.status.speed == 0 && !wireless_send_is_busy()) {
-			Serial.println("Fixing start all on status");
-			wireless_send_message(message.motorModuleNumber, {MESSAGE_START});
-		}
 
 		updateBatteryIndicator(message.status.battery, message.motorModuleNumber, message.status.speed > 0, message.status.disabled, true);
 	}
@@ -435,6 +429,7 @@ void start_stop_all_pressed() {
 
 	if(validCommand) {
 		wireless_send_message_all(msg);
+		lastUpdateBatteryTime = millis();
 	}
 }
 
@@ -662,6 +657,11 @@ void keypadListener(Key *keys, int keysLen) {
 
 void get_all_motor_status() {
 	if(!wireless_send_is_busy()) {
+
+		// Use parameters in message struct to send current state of start / stop all 
+		// Motor uses this to stop if not stopped already or to start if motor isn't already in that state
+		statusMsg.parameters.maxSpeed = sentStartAll ? 1 : 0;
+		statusMsg.parameters.acceleration = sentStopAll ? 1 : 0;
 		wireless_send_message_all(statusMsg);
 	}
 }

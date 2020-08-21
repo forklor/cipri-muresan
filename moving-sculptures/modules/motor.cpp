@@ -173,6 +173,10 @@ void motor_set_parameters(motorParameters params) {
 	}
 }
 
+bool motor_is_running() {
+	return _running;
+}
+
 motorParameters motor_get_parameters() {
 	return settings;
 }
