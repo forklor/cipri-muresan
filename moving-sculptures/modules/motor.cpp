@@ -6,6 +6,8 @@
 #include <math.h>
 #include "motor.h"
 
+#include "print.h"
+
 #define BRAKE 0
 #define CW    1
 #define CCW   2
@@ -183,8 +185,8 @@ motorParameters motor_get_parameters() {
 
 motorStatus motor_get_status() {
 
-	//Serial.print("motor status battery");
-	//Serial.println(batteryLevel);
+	//s_print("motor status battery");
+	//s_println(batteryLevel);
 
 	motorStatus status = {
 		_currentSpeed,
@@ -226,7 +228,7 @@ void _motor_loop(long milliseconds) {
 			if(!_timeWhenTargetSpeedReached) _timeWhenTargetSpeedReached = milliseconds;
 			if(_targetSpeed > 0 && milliseconds - _directionChangeMillis >= settings.changeDirTime) {
 				_timeWhenTargetSpeedReached = 0;
-				Serial.println(F("Changing direction, time passed"));
+				s_println(F("Changing direction, time passed"));
 				motor_switch_direction();
 			}
 			if(_targetSpeed == 0) {
@@ -261,9 +263,9 @@ void _motor_loop(long milliseconds) {
 	_currentSpeed = MIN(255, MAX(0, _currentSpeed));
 
 	if(changed) {
-		Serial.print(_currentDirection);
-		Serial.print(F("->"));
-		Serial.println(_currentSpeed);
+		s_print(_currentDirection);
+		s_print(F("->"));
+		s_println(_currentSpeed);
 
 		motorGo(_currentDirection, _currentSpeed);
 	}
@@ -299,14 +301,14 @@ void _motor_loop(long milliseconds) {
 	}
 
 
-	// Serial.print("cs1:");
-	// Serial.print(analogRead(CURRENT_SEN_1));
-	// Serial.print(" cs2:");
-	// Serial.print(analogRead(CURRENT_SEN_2));
-	// Serial.print(" en1:");
-	// Serial.print(digitalRead(EN_PIN_1));
-	// Serial.print(" en2:");
-	// Serial.print(digitalRead(EN_PIN_2));
-	// Serial.print("\n");
+	// s_print("cs1:");
+	// s_print(analogRead(CURRENT_SEN_1));
+	// s_print(" cs2:");
+	// s_print(analogRead(CURRENT_SEN_2));
+	// s_print(" en1:");
+	// s_print(digitalRead(EN_PIN_1));
+	// s_print(" en2:");
+	// s_print(digitalRead(EN_PIN_2));
+	// s_print("\n");
 
 }

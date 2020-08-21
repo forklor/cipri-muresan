@@ -2,6 +2,7 @@
 #include <RF24_config.h>
 #include <RF24.h>
 #include <printf.h>
+#include "print.h"
 
 #include "wireless.h"
 
@@ -93,7 +94,7 @@ void checkIfMultipleMessages(bool retry) {
 	if(targetAddressIndex < targetAddressesLen) {
 		_wireless_send_message(targetAddressIndex + 1, messageToSend);
 	} else {
-		//Serial.println(F("finished sending message to multiple targets"));
+		//s_println(F("finished sending message to multiple targets"));
 		targetAddressIndex = -1;
 		sendMesssageMultiple = false;
 	}
@@ -122,21 +123,21 @@ void _wireless_loop(long milliseconds) {
 
 	} else if(sendMessage) {
 
-		Serial.print(F("send message from "));
-		Serial.print(localAddress);
-		Serial.print(F(" to "));
-		Serial.print(sendMessagetargetAddress);
-		Serial.print(F(" msg "));
-		Serial.print(messageToSend.type);
-		Serial.print(F(" size "));
-		Serial.println(sizeof(messageToSend));
+		s_print(F("send message from "));
+		s_print(localAddress);
+		s_print(F(" to "));
+		s_print(sendMessagetargetAddress);
+		s_print(F(" msg "));
+		s_print(messageToSend.type);
+		s_print(F(" size "));
+		s_println(sizeof(messageToSend));
 
 		radio->openWritingPipe(wireless_addresses[sendMessagetargetAddress]); // module_x
 
 		if (!radio->write(&messageToSend, sizeof(messageToSend))) {
 			if(retry) {
-				Serial.print(F("Failed writing message after 2 tries"));
-				Serial.println(messageToSend.type);
+				s_print(F("Failed writing message after 2 tries"));
+				s_println(messageToSend.type);
 				if(_w_send_fail_listener != NULL) {
 					_w_send_fail_listener(sendMessagetargetAddress);
 				}
@@ -156,13 +157,13 @@ void _wireless_loop(long milliseconds) {
 			}
 
 			if(timeout) {
-				Serial.println(F("Failed, ack response timed out."));
+				s_println(F("Failed, ack response timed out."));
 			} else {
 
 				wirelessMessageResponse ackResponse;
 				radio->read(&ackResponse, sizeof(ackResponse));
 
-				Serial.println(F("received ack response"));
+				s_println(F("received ack response"));
 				if(_w_ack_listener != NULL) {
 					_w_ack_listener(ackResponse);
 				}
@@ -188,8 +189,8 @@ void wireless_send_message_all(wirelessMessageCommand msg) {
 	listening = false;
 	sendMessage = false;
 
-	Serial.print(F("Send message to all"));
-	Serial.println(msg.type);
+	s_print(F("Send message to all"));
+	s_println(msg.type);
 
 	sendMesssageMultiple = true;
 	targetAddressIndex = 0;
@@ -217,8 +218,8 @@ void wireless_listen(int targetAddress,  void (*f)(wirelessMessageCommand)) {
 
 	_w_listener = f;
 
-	Serial.print(F("Start listening from "));
-	Serial.println(localAddress);
+	s_print(F("Start listening from "));
+	s_println(localAddress);
 
 	listening = true;
 

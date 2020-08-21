@@ -2,6 +2,7 @@
 #define WIRELESS_H_
 
 #include "wireless_message.h"
+#include "config.h"
 
 #define WIRELESS_REMOTE 0
 #define WIRELESS_MODULE_1 1

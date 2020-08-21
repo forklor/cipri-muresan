@@ -12,7 +12,11 @@
 #include "modules/display.h"
 #include "modules/menu.h"
 #include "modules/timer.h"
+
+#ifdef DEBUG
 #include "modules/MemoryFree.h"
+#endif
+#include "print.h"
 
 #define UPDATE_MOTOR_STATUS_MS 1200
 #define UPDATE_BATTERY_LEVEL_MS 5000
@@ -228,14 +232,14 @@ void rc_wirelessMessageAckReceived(wirelessMessageResponse message) {
 		) {
 
 
-		Serial.print("motor: ");
-		Serial.print(message.motorModuleNumber);
-		Serial.print(" battery: ");
-		Serial.print(message.status.battery);
-		Serial.print(" speed: ");
-		Serial.print(message.status.speed);
-		Serial.print(" disabled: ");
-		Serial.println(message.status.disabled);
+		s_print("motor: ");
+		s_print(message.motorModuleNumber);
+		s_print(" battery: ");
+		s_print(message.status.battery);
+		s_print(" speed: ");
+		s_print(message.status.speed);
+		s_print(" disabled: ");
+		s_println(message.status.disabled);
 
 		updateBatteryIndicator(message.status.battery, message.motorModuleNumber, message.status.speed > 0, message.status.disabled, true);
 	}
@@ -676,8 +680,10 @@ void get_all_motor_status() {
 
 void _setup() {
 
+#ifdef DEBUG
 	Serial.begin(9600);
-	Serial.println(F("Remote control program running"));
+#endif
+	s_println(F("Remote control program running"));
 	_wireless_setup_remote(A0, A1);
 	wireless_listen_ack(rc_wirelessMessageAckReceived);
 	wireless_send_message_all_fail_listener(rc_wirelessMessageSendFailed);
@@ -692,10 +698,10 @@ void _setup() {
 	int check_saved_memory;
 	EEPROM.get(0, check_saved_memory);
 	if(check_saved_memory == MEMORY_CHECK_VALUE) {
-		Serial.println(F("Found parameters saved in EEPROM"));
+		s_println(F("Found parameters saved in EEPROM"));
 		EEPROM.get(sizeof(int), savedTimerParams);
 	} else {
-		Serial.println(F("Didn't find parameters saved in EEPROM, initializing..."));
+		s_println(F("Didn't find parameters saved in EEPROM, initializing..."));
 		saveTimerParameters(30000L, 690000L);
 	}
 
@@ -729,11 +735,13 @@ void _loop() {
 		lastUpdateBatteryTime = milliseconds;
 	}
 
-	// if(milliseconds - displayFreeMemoryMs >= 1000) {
-	// 	displayFreeMemoryMs = milliseconds;
-	// 	Serial.print("freeMemory()=");
-	// 	Serial.println(freeMemory());
-	// }
+#ifdef DEBUG
+	if(milliseconds - displayFreeMemoryMs >= 1000) {
+		displayFreeMemoryMs = milliseconds;
+		s_print("freeMemory()=");
+		s_println(freeMemory());
+	}
+#endif
 }
 
 #endif //MOTOR_REMOTE_CONTROLLER

@@ -9,7 +9,11 @@
 
 #include "modules/motor.h"
 #include "modules/wireless.h"
+#ifdef DEBUG
 #include "modules/MemoryFree.h"
+#endif
+
+#include "print.h"
 
 void saveMotorParameters(motorParameters params) {
 	int check_memory = MEMORY_CHECK_VALUE;
@@ -19,8 +23,8 @@ void saveMotorParameters(motorParameters params) {
 
 void m_wirelessMessageReceived(wirelessMessageCommand message) {
 
-	Serial.print(F("received message "));
-	Serial.println(message.type);
+	s_print(F("received message "));
+	s_println(message.type);
 
 	switch (message.type) {
 		case MESSAGE_TOGGLE_START_STOP:
@@ -55,18 +59,18 @@ void m_wirelessMessageReceived(wirelessMessageCommand message) {
 			break;
 		case MESSAGE_SET_PARAMS:
 			if(!motor_is_disabled()) {
-				Serial.print(F("setting params \nspeed:"));
-				Serial.print(message.parameters.maxSpeed);
-				Serial.print(F("acc:"));
-				Serial.print(message.parameters.acceleration);
-				Serial.print(F("decc:"));
-				Serial.println(message.parameters.decelerationPercentage);
+				s_print(F("setting params \nspeed:"));
+				s_print(message.parameters.maxSpeed);
+				s_print(F("acc:"));
+				s_print(message.parameters.acceleration);
+				s_print(F("decc:"));
+				s_println(message.parameters.decelerationPercentage);
 				motor_set_parameters(message.parameters);
 				saveMotorParameters(message.parameters);
 			}
 			break;
 		default:
-			Serial.println(F("Unknown message type"));
+			s_println(F("Unknown message type"));
 	}
 
 	wirelessMessageResponse ack;
@@ -80,8 +84,10 @@ void m_wirelessMessageReceived(wirelessMessageCommand message) {
 
 void _setup() {
 
+#ifdef DEBUG
 	Serial.begin(9600);
-	Serial.println(F("Motor program running"));
+#endif
+	s_println(F("Motor program running"));
 	_wireless_setup(9, 10, MOTOR_MODULE_NUMBER);
 
 
@@ -89,7 +95,7 @@ void _setup() {
 	motorParameters savedParameters;
 	EEPROM.get(0, check_memory);
 	if(check_memory == MEMORY_CHECK_VALUE) {
-		Serial.println(F("Found parameters saved in EEPROM"));
+		s_println(F("Found parameters saved in EEPROM"));
 		EEPROM.get(sizeof(int), savedParameters);
 	} else {
 		savedParameters = {
@@ -99,7 +105,7 @@ void _setup() {
 			500, 			// CS Threshold
 			20000  			// Change dir time
 		};
-		Serial.println(F("Didn't find parameters saved in EEPROM, initializing..."));
+		s_println(F("Didn't find parameters saved in EEPROM, initializing..."));
 		saveMotorParameters(savedParameters);
 	}
 	_motor_setup();
@@ -126,11 +132,13 @@ void _loop() {
 	_motor_loop(milliseconds);
 	_wireless_loop(milliseconds);
 
-	// if(milliseconds - displayFreeMemoryMs >= 1000) {
-	// 	displayFreeMemoryMs = milliseconds;
-	// 	Serial.print("battery()=");
-	// 	Serial.println(analogRead(4));
-	// }
+#ifdef DEBUG
+	if(milliseconds - displayFreeMemoryMs >= 1000) {
+		displayFreeMemoryMs = milliseconds;
+		s_print("freeMemory()=");
+		s_println(freeMemory());
+	}
+#endif
 
 	if (Serial.available() > 0) {
 		char receivedChar = Serial.read();
@@ -151,8 +159,8 @@ void _loop() {
 				motor_switch_direction();
 				break;
 			default:
-				Serial.print(F("Unknown command "));
-				Serial.println(receivedChar);
+				s_print(F("Unknown command "));
+				s_println(receivedChar);
 		}
 	}
 }

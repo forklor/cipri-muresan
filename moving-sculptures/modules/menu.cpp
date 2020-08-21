@@ -5,6 +5,8 @@
 
 #include <MenuBackend.h>
 
+#include "print.h"
+
 void updateDisplay();
 
 int bat1;
@@ -50,9 +52,9 @@ int UPDATE_DISPLAY_TIME_MS;
 char selectedMenu;
 
 void menuUseEventListener(MenuUseEvent used) {
-	Serial.print(F("Menu use "));
-	Serial.print(used.item.getName());
-	Serial.println(used.item.getShortkey());
+	s_print(F("Menu use "));
+	s_print(used.item.getName());
+	s_println(used.item.getShortkey());
 	selectedMenu = used.item.getShortkey();
 	updateDisplay();
 }
@@ -62,10 +64,10 @@ long lastStepMs;
 void menuChangeEventListener(MenuChangeEvent changed) {
 
 	updateDisplay();
-	// Serial.print(F("Menu change "));
-	// Serial.print(changed.from.getName());
-	// Serial.print(F(" "));
-	// Serial.println(changed.to.getName());
+	// s_print(F("Menu change "));
+	// s_print(changed.from.getName());
+	// s_print(F(" "));
+	// s_println(changed.to.getName());
 }
 
 MenuBackend menu = MenuBackend(menuUseEventListener, menuChangeEventListener);
@@ -106,10 +108,10 @@ void displayBatteryStatus(int value, int motorNo, bool running, bool disabled, b
 	}
 
 
-	//Serial.print("motor=");
-	//Serial.print(motorNo);
-	//Serial.print(" voltage=");
-	//Serial.println(voltage);
+	//s_print("motor=");
+	//s_print(motorNo);
+	//s_print(" voltage=");
+	//s_println(voltage);
 
 	if(!reachable) {
 		byte batlevel[8] = {
@@ -295,29 +297,29 @@ void updateDisplay() {
 }
 
 void menu_up() {
-	Serial.print("menu move up ");
-	Serial.println(menu.getCurrent().getName());
+	s_print("menu move up ");
+	s_println(menu.getCurrent().getName());
 	menu.moveUp();
 	updateDisplay();
 }
 
 void menu_down() {
-	Serial.print("menu move down ");
-	Serial.println(menu.getCurrent().getName());
+	s_print("menu move down ");
+	s_println(menu.getCurrent().getName());
 	menu.moveDown();
 	updateDisplay();
 }
 
 void menu_right() {
-	Serial.print("menu move right ");
-	Serial.println(menu.getCurrent().getName());
+	s_print("menu move right ");
+	s_println(menu.getCurrent().getName());
 	menu.moveRight();
 	updateDisplay();
 }
 
 void menu_left() {
-	Serial.print("menu move left ");
-	Serial.println(menu.getCurrent().getName());
+	s_print("menu move left ");
+	s_println(menu.getCurrent().getName());
 	menu.moveLeft();
 	updateDisplay();
 }
