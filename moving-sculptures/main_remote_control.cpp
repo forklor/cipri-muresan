@@ -41,6 +41,14 @@ void timerStateChanged(bool running) {
 	wirelessMessageCommand msg;
 	msg.type = running ? MESSAGE_START : MESSAGE_STOP;
 	wireless_send_message_all(msg);
+	// Update last state to be sent with message_status command
+	if(msg.type == MESSAGE_START) {
+		sentStartAll = true;
+		sentStopAll = false;
+	} else if(msfg.type == MESSAGE_STOP) {
+		sentStopAll = true;
+		sentStartAll = false;
+	}
 	lastUpdateBatteryTime = millis();
 }
 
