@@ -45,7 +45,7 @@ void timerStateChanged(bool running) {
 	if(msg.type == MESSAGE_START) {
 		sentStartAll = true;
 		sentStopAll = false;
-	} else if(msfg.type == MESSAGE_STOP) {
+	} else if(msg.type == MESSAGE_STOP) {
 		sentStopAll = true;
 		sentStartAll = false;
 	}
